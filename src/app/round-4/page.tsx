@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation } from "convex/react";
-import { api } from "convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { getToken } from "@/lib/session";
