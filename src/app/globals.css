@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #000000;
+  --ink: #f5f4f0;
+  --muted: #787774;
+  --line: #242424;
+  --line-soft: #161616;
+  --red: #b3352b;
+  --amber: #c79a3c;
+  --green: #5f8a5a;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-mut: var(--muted);
+  --color-line: var(--line);
+  --color-linesoft: var(--line-soft);
+  --color-blood: var(--red);
+  --color-amber: var(--amber);
+  --color-sage: var(--green);
+  --font-display: var(--font-instrument), Georgia, serif;
+  --font-ui: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-mono-geist), ui-monospace, monospace;
+}
+
+html { background: #000; }
+body { background: #000; color: var(--ink); }
+
+::selection { background: rgba(179,53,43,0.35); color: #fff; }
+
+.grain::after {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  background: repeating-conic-gradient(#000 0% 25%, #0d0d0d 0% 50%) 50% / 4px 4px;
+  opacity: 0.025; mix-blend-mode: overlay;
+}
+.vignette::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 49;
+  background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, rgba(0,0,0,0.9) 100%);
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(199,154,60,0.5); }
+  70% { box-shadow: 0 0 0 7px rgba(199,154,60,0); }
+  100% { box-shadow: 0 0 0 0 rgba(199,154,60,0); }
+}
+.dot-live { animation: pulse-ring 2s cubic-bezier(0.4,0,0.6,1) infinite; }
+
+@keyframes blink { 0%,60% { opacity: 1; } 61%,100% { opacity: 0.12; } }
+.blink { animation: blink 1.4s steps(1) infinite; }
+
+.hairline {
+  height: 1px; width: 100%;
+  background: linear-gradient(to right, transparent, var(--line) 12%, var(--line) 88%, transparent);
+  border: 0;
+}
+
+.field {
+  background: #0a0a0a;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  outline: none;
+}
+.field:focus { border-color: #4a4a4a; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #242424; border-radius: 0; }
