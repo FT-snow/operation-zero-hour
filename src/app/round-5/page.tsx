@@ -267,9 +267,10 @@ function Round5Inner({ token }: { token: string }) {
 function TopBar() {
   return (
     <header className="border-b border-linesoft">
-      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between font-mono text-[11px] tracking-[0.2em] text-mut">
-        <Link href="/story" className="hover:text-ink transition-colors">&lt; CASE FILE</Link>
-        <span>ROUND 05 // THE ACCUSATION</span>
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4 font-mono text-[11px] tracking-[0.2em] text-mut">
+        <Link href="/" className="text-ink hover:text-white transition-colors whitespace-nowrap">OPERATION ZERO HOUR</Link>
+        <span className="hidden sm:inline text-mut whitespace-nowrap">ROUND 05 // THE ACCUSATION</span>
+        <Link href="/story" className="hover:text-ink transition-colors whitespace-nowrap">&lt; CASE FILE</Link>
       </div>
     </header>
   );

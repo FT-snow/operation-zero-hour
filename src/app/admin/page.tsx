@@ -26,6 +26,17 @@ const TAB_NAMES: Record<Tab, string> = {
   logs: "LOGS",
 };
 
+// Full server timestamp with millisecond precision: 2026-10-08 17:52:41.123 UTC
+function stamp(ms: number): string {
+  const iso = new Date(ms).toISOString();
+  return `${iso.slice(0, 10)} ${iso.slice(11, 23)} UTC`;
+}
+
+// ISO string for CSV export
+function stampLED(ms: number): string {
+  return new Date(ms).toISOString();
+}
+
 function downloadCsv(filename: string, rows: (string | number)[][]) {
   const csv = Papa.unparse(rows);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -65,7 +76,10 @@ function AdminInner({ token }: { token: string }) {
     <main className="min-h-screen">
       <header className="border-b border-linesoft sticky top-0 bg-black/90 backdrop-blur z-40">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link href="#" className="font-mono text-[11px] tracking-[0.25em] text-ink">
+          <Link
+            href="/"
+            className="font-mono text-[11px] tracking-[0.25em] text-ink hover:text-white transition-colors"
+          >
             OPERATION ZERO HOUR <span className="text-blood">// CONTROL ROOM</span>
           </Link>
           <div className="flex items-center gap-6 font-mono text-[11px]">
@@ -778,7 +792,7 @@ function ResultsTab({ token }: { token: string }) {
                 <tbody>
                   {solves.solves.map((s) => (
                     <tr key={s._id} className="border-b border-linesoft">
-                      <td className="px-4 py-2.5 text-mut">{new Date(s.solvedAt).toISOString().replace("T", " ").slice(0, 19)}</td>
+                      <td className="px-4 py-2.5 text-mut">{stamp(s.solvedAt)}</td>
                       <td className="px-4 py-2.5 text-amber">{s.teamCode}</td>
                       <td className="px-4 py-2.5">{s.teamName}</td>
                     </tr>
@@ -821,7 +835,7 @@ function ResultsTab({ token }: { token: string }) {
                     <>
                       <p className="font-display text-2xl mb-1">{s.teamName}</p>
                       <p className="font-mono text-[10px] text-mut">
-                        {s.teamCode} - {new Date(s.submittedAt).toISOString().replace("T", " ").slice(11, 19)}
+                        {s.teamCode} - {stamp(s.submittedAt)}
                       </p>
                     </>
                   ) : (
@@ -873,7 +887,7 @@ function ResultsTab({ token }: { token: string }) {
                       <td className={`px-4 py-2.5 ${s.correct ? "text-sage" : "text-blood"}`}>
                         {s.correct ? "CORRECT" : "WRONG"}
                       </td>
-                      <td className="px-4 py-2.5 text-mut">{new Date(s.submittedAt).toISOString().replace("T", " ").slice(11, 19)}</td>
+                      <td className="px-4 py-2.5 text-mut">{stamp(s.submittedAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -894,7 +908,7 @@ function ResultsTab({ token }: { token: string }) {
                   downloadCsv("zero-hour-round4-solves.csv", [
                     ["Solved At (server)", "Team ID", "Team Name"],
                     ...solves.solves.map((s) => [
-                      new Date(s.solvedAt).toISOString(),
+                      stampLED(s.solvedAt),
                       s.teamCode,
                       s.teamName,
                     ]),
@@ -913,7 +927,7 @@ function ResultsTab({ token }: { token: string }) {
                       s.teamName,
                       s.killer,
                       s.correct ? "CORRECT" : "WRONG",
-                      new Date(s.submittedAt).toISOString(),
+                      stampLED(s.submittedAt),
                     ]),
                   ])
                 }
@@ -948,7 +962,7 @@ function ResultsTab({ token }: { token: string }) {
                         {s.teamName}
                       </td>
                       <td className="px-4 py-2.5 border-b border-linesoft text-mut">
-                        {new Date(s.submittedAt).toISOString().replace("T", " ").slice(0, 19)}
+                        {stamp(s.submittedAt)}
                       </td>
                     </tr>
                   ))}
@@ -991,7 +1005,7 @@ function LogsTab({ token }: { token: string }) {
                 {logs.entries.map((l) => (
                   <tr key={l._id} className="border-t border-linesoft">
                     <td className="px-4 py-2.5 text-mut whitespace-nowrap">
-                      {new Date(l.at).toISOString().replace("T", " ").slice(0, 19)}
+                      {stamp(l.at).slice(0,20) + " UTC"}
                     </td>
                     <td className="px-4 py-2.5 text-mut">{l.adminLabel}</td>
                     <td className="px-4 py-2.5 text-amber whitespace-nowrap">{l.action}</td>

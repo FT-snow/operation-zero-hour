@@ -71,9 +71,12 @@ export default function StoryPage() {
     <main className="min-h-screen">
       <header className="border-b border-linesoft sticky top-0 bg-black/85 backdrop-blur z-40">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <span className="font-mono text-[11px] tracking-[0.2em] text-mut">
+          <Link
+            href="/"
+            className="font-mono text-[11px] tracking-[0.2em] text-mut hover:text-ink transition-colors"
+          >
             OPERATION ZERO HOUR
-          </span>
+          </Link>
           <div className="flex items-center gap-6 font-mono text-[11px] tracking-[0.15em]">
             <span className="text-ink">{joined}</span>
             <button onClick={doLogout} className="text-mut hover:text-ink transition-colors">
