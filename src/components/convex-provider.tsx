@@ -5,7 +5,9 @@ import { ConvexQueryClient } from "@convex-dev/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 
-const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL!;
+// Public cloud URL is not a secret; env var is preferred but we hard-fallback
+// so a missing Vercel env setting can never crash the deployment.
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL || "https://beaming-mallard-142.convex.cloud";
 
 export default function ConvexClientProvider({
   children,
