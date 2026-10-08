@@ -94,7 +94,7 @@ export const resetPassword = mutation({
     if (!team) return { ok: false as const, error: "Team not found" };
     const pw = randomPassword();
     const salt = makeSalt();
-    await ctx.db.patch(team._id, { passwordHash: hashPassword(pw, salt), salt });
+    await ctx.db.patch(team._id, { passwordHash: hashPassword(pw, salt), passwordPlain: pw, salt });
     // Kill existing team sessions
     const old = await ctx.db
       .query("sessions")

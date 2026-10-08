@@ -21,6 +21,7 @@ export const listAdmin = query({
         _id: t._id,
         teamCode: t.teamCode,
         teamName: t.teamName,
+        passwordPlain: t.passwordPlain, // admin desk lookup only
         createdAt: t.createdAt,
         members,
       });
@@ -131,6 +132,7 @@ export const generateCredentials = mutation({
         teamName,
         teamCode,
         passwordHash: hashPassword(password, salt),
+        passwordPlain: password,
         salt,
         memberIds,
         createdAt: Date.now(),
@@ -202,6 +204,7 @@ export const resetTestState = mutation({
         teamName: dummyName,
         teamCode: "TM-001",
         passwordHash: hashPassword(dummyPw, salt),
+        passwordPlain: dummyPw,
         salt,
         memberIds: [pid],
         createdAt: Date.now(),
@@ -218,5 +221,43 @@ export const resetTestState = mutation({
     });
 
     return { ok: true as const, dummy };
+  },
+});
+
+// Backfill plaintext copies from the real generation output.
+// Integrity-checked: only stores a plaintext whose hash matches the stored hash.
+export const backfillPasswords = mutation({
+  args: {
+    token: v.string(),
+    entries: v.array(v.object({ teamCode: v.string(), password: v.string() })),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const verified: string[] = [];
+    const skipped: string[] = [];
+    for (const e of args.entries) {
+      const code = e.teamCode.trim().toUpperCase();
+      const team = await ctx.db
+        .query("teams")
+        .withIndex("by_teamCode", (q) => q.eq("teamCode", code))
+        .unique();
+      if (!team) {
+        skipped.push(code);
+        continue;
+      }
+      if (hashPassword(e.password, team.salt) === team.passwordHash) {
+        await ctx.db.patch(team._id, { passwordPlain: e.password });
+        verified.push(code);
+      } else {
+        skipped.push(code);
+      }
+    }
+    await audit(ctx, {
+      action: "teams.backfillPasswords",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: `Backfilled plaintext copies: ${verified.length} verified, ${skipped.length} skipped`,
+    });
+    return { ok: true as const, verified: verified.length, skipped };
   },
 });

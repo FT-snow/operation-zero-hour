@@ -131,6 +131,7 @@ function TeamsTab({ token }: { token: string }) {
   const [creds, setCreds] = useState<Cred[] | null>(null);
   const [opsError, setOpsError] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [rosterQuery, setRosterQuery] = useState("");
   const [newMember, setNewMember] = useState("");
   const addMember = useMutation(api.auth.teamExtend);
   const removeMember = useMutation(api.auth.teamRemoveMember);
@@ -244,6 +245,15 @@ function TeamsTab({ token }: { token: string }) {
   }
 
   const teams = teamsData.teams;
+  const q = rosterQuery.trim().toLowerCase();
+  const filteredTeams = q
+    ? teams.filter(
+        (t) =>
+          t.teamCode.toLowerCase().includes(q) ||
+          t.teamName.toLowerCase().includes(q) ||
+          t.members.some((m) => m.name.toLowerCase().includes(q))
+      )
+    : teams;
 
   return (
     <div className="space-y-10">
@@ -380,11 +390,22 @@ function TeamsTab({ token }: { token: string }) {
 
       <FadeIn>
         <div className="border border-linesoft p-8">
-          <p className="font-mono text-[10px] tracking-[0.2em] text-mut mb-5">
-            ROSTER - {teams.length} TEAM(S)
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+            <p className="font-mono text-[10px] tracking-[0.2em] text-mut">
+              ROSTER - {filteredTeams.length} OF {teams.length} TEAM(S)
+            </p>
+            <input
+              value={rosterQuery}
+              onChange={(e) => setRosterQuery(e.target.value)}
+              placeholder="SEARCH TEAM ID, NAME, MEMBER..."
+              className="field font-mono text-[11px] tracking-wider px-4 py-2.5 w-full sm:w-80"
+              spellCheck={false}
+            />
+          </div>
           {teams.length === 0 ? (
             <p className="font-mono text-xs text-mut">No teams yet. Upload the Excel above.</p>
+          ) : filteredTeams.length === 0 ? (
+            <p className="font-mono text-xs text-mut">No team matches "{rosterQuery}".</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full font-mono text-xs">
@@ -392,15 +413,17 @@ function TeamsTab({ token }: { token: string }) {
                   <tr className="text-left text-mut border-b border-linesoft">
                     <th className="px-4 py-2.5 font-normal">TEAM ID</th>
                     <th className="px-4 py-2.5 font-normal">NAME</th>
+                    <th className="px-4 py-2.5 font-normal">PASSWORD</th>
                     <th className="px-4 py-2.5 font-normal">MEMBERS</th>
                     <th className="px-4 py-2.5 font-normal text-right">ADMIN</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {teams.map((t) => (
+                  {filteredTeams.map((t) => (
                     <tr key={t.teamCode} className="border-b border-linesoft align-top">
-                      <td className="px-4 py-3 text-amber">{t.teamCode}</td>
-                      <td className="px-4 py-3">{t.teamName || <span className="text-mut">(SOLO)</span>}</td>
+                      <td className="px-4 py-3 text-amber whitespace-nowrap">{t.teamCode}</td>
+                      <td className="px-4 py-3">{t.teamName}</td>
+                      <td className="px-4 py-3 text-ink select-all">{t.passwordPlain ?? "—"}</td>
                       <td className="px-4 py-3 text-mut">
                         {expanded === t.teamCode ? (
                           <div className="space-y-1">

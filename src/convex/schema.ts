@@ -7,6 +7,7 @@ export default defineSchema({
     teamCode: v.string(), // "TM-001"
     passwordHash: v.string(),
     salt: v.string(),
+    passwordPlain: v.optional(v.string()), // admin-desk copy; team-facing endpoints never return it
     memberIds: v.array(v.id("participants")),
     createdAt: v.number(),
   })
