@@ -3,6 +3,8 @@ import { mutation, query } from "./_generated/server";
 import { requireTeamByToken, requireAdminByToken, audit } from "./lib/auth";
 
 // ---------- Team: submit final report (Round 5) ----------
+// AUTO-OPEN: Round 5 unlocks for a team the moment it clears Round 4.
+// Admin's only lever is CLOSE (shuts the door for everyone).
 
 export const submit = mutation({
   args: {
@@ -14,13 +16,11 @@ export const submit = mutation({
   handler: async (ctx, args) => {
     const team = await requireTeamByToken(ctx, args.token);
 
-    // Round 5 must be live
     const round = await ctx.db
       .query("rounds")
       .withIndex("by_roundNumber", (q) => q.eq("roundNumber", 5))
       .unique();
     if (!round) return { ok: false as const, error: "Round not available" };
-    if (round.status === "not_started") return { ok: false as const, error: "Round not started" };
     if (round.status === "closed") return { ok: false as const, error: "Round is closed - submissions rejected" };
 
     // Must have cleared Round 4
@@ -101,13 +101,13 @@ export const access = query({
       .unique();
     const cleared = !!progress?.round4Cleared;
     const status = round?.status ?? "not_started";
-    // Content is only accessible when round live AND cleared.
-    const open = status === "live" && cleared;
+    // AUTO-OPEN: cleared teams get access the instant they solve Round 4,
+    // regardless of Round 5 status - only "closed" can shut them out.
+    const open = cleared && status !== "closed";
     return {
       status,
       cleared,
       open,
-      alreadySubmitted: false, // filled below via extra query is expensive; separate query `mine` used
     };
   },
 });
@@ -191,7 +191,7 @@ export const suspectsForTeam = query({
       .withIndex("by_team", (q) => q.eq("teamId", team._id))
       .unique();
     const cleared = !!progress?.round4Cleared;
-    const visible = cleared && (round?.status === "live" || round?.status === "closed");
+    const visible = cleared && (round?.status ?? "not_started") !== "closed";
     if (!visible) return { locked: true as const, suspects: [] };
     const cfg = await ctx.db.query("config").first();
     return { locked: false as const, suspects: cfg?.suspects ?? [] };

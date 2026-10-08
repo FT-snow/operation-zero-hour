@@ -35,14 +35,17 @@ const LINKS: Record<number, string> = {
 export default function StoryPage() {
   const token = getToken();
   const data = useQuery(api.rounds.list, token ? { token } : "skip");
+  const myR4 = useQuery(api.round4.myStatus, token ? { token } : "skip");
+  const summary = useQuery(api.teams.summary, token ? { token } : "skip");
   const meSub = useQuery(api.submissions.mine, token ? { token } : "skip");
   const logout = useMutation(api.auth.logout);
   const router = useRouter();
   const [joined, setJoined] = useState("");
 
   useEffect(() => {
-    setJoined(getName());
-  }, []);
+    if (summary) setJoined(`${summary.teamCode} - ${summary.teamName}`);
+    else setJoined(getName());
+  }, [summary]);
 
   if (!data) {
     return (
@@ -102,7 +105,11 @@ export default function StoryPage() {
         </p>
         <Stagger className="space-y-0">
           {data.rounds.map((r) => {
-            const locked = r.status === "not_started";
+            const cleared = myR4?.cleared ?? false;
+            const r5AutoOpen =
+              r.roundNumber === 5 && cleared && r.status !== "closed";
+            const noEntry = r.status !== "closed" && r5AutoOpen;
+            const locked = r.status === "not_started" && !noEntry;
             const hasPage = LINKS[r.roundNumber];
             const body = (
               <div
@@ -118,10 +125,15 @@ export default function StoryPage() {
                     <h2 className="font-display text-2xl md:text-3xl tracking-tight">
                       {ROUND_NAMES[r.roundNumber]}
                     </h2>
-                    <StatusBadge status={r.status} roundNumber={r.roundNumber} pulse />
+                    <StatusBadge status={noEntry ? "live" : r.status} roundNumber={r.roundNumber} pulse />
                     {r.roundNumber === 3 && r.videosRevealed && r.status === "live" && (
                       <span className="font-mono text-[10px] tracking-[0.2em] text-sage border border-sage/40 px-2.5 py-1">
                         TAPES REVEALED
+                      </span>
+                    )}
+                    {r.roundNumber === 5 && r5AutoOpen && (
+                      <span className="font-mono text-[10px] tracking-[0.2em] text-sage border border-sage/40 px-2.5 py-1">
+                        BOLT PASSED - OPENED
                       </span>
                     )}
                   </div>

@@ -119,8 +119,8 @@ function Round5Inner({ token }: { token: string }) {
             <div className="border border-linesoft px-8 py-16 flex flex-col items-center gap-5 text-center">
               <LockIcon size={34} className="text-mut" />
               <p className="font-display text-3xl md:text-4xl max-w-xl leading-snug">
-                {access.status === "not_started"
-                  ? "The court has not convened."
+                {access.status === "closed" && !access.cleared
+                  ? "The case is closed and your bolt remained shut."
                   : access.status === "closed"
                   ? "The case is closed."
                   : !access.cleared
@@ -128,10 +128,8 @@ function Round5Inner({ token }: { token: string }) {
                   : "Round not open."}
               </p>
               <p className="font-mono text-xs text-mut max-w-md leading-relaxed">
-                {access.status === "not_started"
-                  ? "Wait for the control room signal."
-                  : access.status === "closed"
-                  ? "Submission window is shut. This door will not reopen."
+                {access.status === "closed"
+                  ? "The control room shut this door. Submissions are no longer possible."
                   : !access.cleared
                   ? "Round 04 stands between you and this page. Return to the code."
                   : ""}

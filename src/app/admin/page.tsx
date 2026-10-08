@@ -179,7 +179,7 @@ function TeamsTab({ token }: { token: string }) {
       const res = await generate({
         token,
         groups: preview.map((g) => ({
-          teamName: g.teamName === "" ? null : g.teamName,
+          teamName: g.teamName.trim(),
           members: g.members.map((m) => ({ name: m.name, email: m.email || undefined })),
         })),
       });
@@ -259,28 +259,48 @@ function TeamsTab({ token }: { token: string }) {
               <div className="flex items-center justify-between mb-4">
                 <p className="font-mono text-[10px] tracking-[0.2em] text-mut">
                   PREVIEW - {preview.length} TEAM(S), {preview.reduce((a, g) => a + g.members.length, 0)} MEMBER(S)
+                  {" - "}
+                  <span className={preview.every((g) => g.teamName.trim()) ? "text-sage" : "text-amber"}>
+                    NAMED {preview.filter((g) => g.teamName.trim()).length}/{preview.length}
+                  </span>
                 </p>
                 <button
                   onClick={doGenerate}
-                  disabled={generating}
+                  disabled={generating || !preview.every((g) => g.teamName.trim())}
                   className="bg-ink text-bg font-mono text-[11px] tracking-[0.2em] px-6 py-3 hover:bg-white transition-colors disabled:opacity-40"
                 >
                   {generating ? "GENERATING..." : "GENERATE CREDENTIALS"}
                 </button>
               </div>
-              <div className="max-h-72 overflow-y-auto border border-linesoft">
+              <div className="max-h-96 overflow-y-auto border border-linesoft">
                 <table className="w-full font-mono text-xs">
                   <thead className="sticky top-0 bg-[#0d0d0d]">
                     <tr className="text-left text-mut">
-                      <th className="px-4 py-2.5 font-normal">TEAM NAME</th>
+                      <th className="px-4 py-2.5 font-normal w-52">TEAM NAME (NAME EACH)</th>
                       <th className="px-4 py-2.5 font-normal">MEMBERS</th>
                     </tr>
                   </thead>
                   <tbody>
                     {preview.map((g, i) => (
                       <tr key={i} className="border-t border-linesoft">
-                        <td className="px-4 py-2.5">{g.teamName || <span className="text-mut">(SOLO)</span>}</td>
-                        <td className="px-4 py-2.5 text-mut">{g.members.map((m) => m.name).join(", ")}</td>
+                        <td className="px-4 py-2">
+                          <input
+                            value={g.teamName}
+                            onChange={(e) =>
+                              setPreview((p) => {
+                                if (!p) return p;
+                                const next = [...p];
+                                next[i] = { ...next[i], teamName: e.target.value };
+                                return next;
+                              })
+                            }
+                            placeholder={`UNNAMED TEAM ${i + 1}`}
+                            className={`field font-mono text-[11px] px-3 py-2 w-full ${
+                              g.teamName.trim() ? "text-ink" : "text-mut"
+                            }`}
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-mut">{g.members.map((m) => m.name).join(", ")}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -526,13 +546,15 @@ function RoundsTab({ token }: { token: string }) {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button
-                  onClick={() => doStatus(r.roundNumber, "live")}
-                  disabled={r.status === "live"}
-                  className="border border-line font-mono text-[10px] tracking-[0.2em] px-4 py-2.5 hover:bg-ink hover:text-bg transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
-                >
-                  SET LIVE
-                </button>
+                {r.roundNumber !== 5 && (
+                  <button
+                    onClick={() => doStatus(r.roundNumber, "live")}
+                    disabled={r.status === "live"}
+                    className="border border-line font-mono text-[10px] tracking-[0.2em] px-4 py-2.5 hover:bg-ink hover:text-bg transition-colors disabled:opacity-25 disabled:hover:bg-transparent"
+                  >
+                    SET LIVE
+                  </button>
+                )}
                 {r.roundNumber === 3 && (
                   <button
                     onClick={async () => { await revealVids({ token }); setMsg("Tapes revealed."); }}
@@ -548,6 +570,14 @@ function RoundsTab({ token }: { token: string }) {
                 >
                   CLOSE ROUND
                 </button>
+                {r.roundNumber === 5 && r.status === "closed" && (
+                  <button
+                    onClick={() => doStatus(r.roundNumber, "not_started")}
+                    className="border border-line font-mono text-[10px] tracking-[0.2em] px-4 py-2.5 hover:bg-ink hover:text-bg transition-colors"
+                  >
+                    REOPEN DOOR
+                  </button>
+                )}
               </div>
             </div>
 
@@ -660,6 +690,12 @@ function RoundsTab({ token }: { token: string }) {
             {/* Round 5: killer config */}
             {r.roundNumber === 5 && (
               <div className="border-t border-linesoft pt-5 mt-4">
+                <p className="font-mono text-[10px] tracking-[0.2em] text-amber mb-2">
+                  AUTO-OPEN - ROUND 5 UNLOCKS FOR EACH TEAM THE MOMENT IT CLEARS ROUND 04.
+                </p>
+                <p className="font-mono text-[10px] tracking-[0.2em] text-mut mb-4">
+                  YOU ONLY CONTROL THE DOOR: "CLOSE ROUND" SHUTS IT FOR EVERYONE.
+                </p>
                 <p className="font-mono text-[10px] tracking-[0.2em] text-mut mb-4">
                   VERDICT {config.hasKiller ? `- KILLER: ${config.realKiller?.toUpperCase()}` : "- NOT SET"}
                 </p>
