@@ -8,6 +8,7 @@ export default defineSchema({
     passwordHash: v.string(),
     salt: v.string(),
     passwordPlain: v.optional(v.string()), // admin-desk copy; team-facing endpoints never return it
+    attendance: v.optional(v.boolean()), // checked in at the desk
     memberIds: v.array(v.id("participants")),
     createdAt: v.number(),
   })

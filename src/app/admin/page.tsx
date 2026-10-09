@@ -123,6 +123,8 @@ function TeamsTab({ token }: { token: string }) {
   const generate = useMutation(api.teams.generateCredentials);
   const resetPw = useMutation(api.auth.resetPassword);
   const deleteTeam = useMutation(api.auth.teamDelete);
+  const setAttendanceMutation = useMutation(api.teams.setAttendance);
+  const setAttendanceBulkMutation = useMutation(api.teams.setAttendanceBulk);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<PreviewGroup[] | null>(null);
@@ -132,6 +134,7 @@ function TeamsTab({ token }: { token: string }) {
   const [opsError, setOpsError] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [rosterQuery, setRosterQuery] = useState("");
+  const [rosterMsg, setRosterMsg] = useState("");
   const [newMember, setNewMember] = useState("");
   const addMember = useMutation(api.auth.teamExtend);
   const removeMember = useMutation(api.auth.teamRemoveMember);
@@ -393,15 +396,60 @@ function TeamsTab({ token }: { token: string }) {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
             <p className="font-mono text-[10px] tracking-[0.2em] text-mut">
               ROSTER - {filteredTeams.length} OF {teams.length} TEAM(S)
+              {" - "}
+              <span className="text-sage">{teams.filter((t) => t.attendance === true).length} PRESENT</span>
+              <span className="text-mut"> / {teams.filter((t) => t.attendance !== true).length} NOT IN</span>
             </p>
-            <input
-              value={rosterQuery}
-              onChange={(e) => setRosterQuery(e.target.value)}
-              placeholder="SEARCH TEAM ID, NAME, MEMBER..."
-              className="field font-mono text-[11px] tracking-wider px-4 py-2.5 w-full sm:w-80"
-              spellCheck={false}
-            />
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <input
+                value={rosterQuery}
+                onChange={(e) => setRosterQuery(e.target.value)}
+                placeholder="SEARCH TEAM ID, NAME, MEMBER..."
+                className="field font-mono text-[11px] tracking-wider px-4 py-2.5 w-full sm:w-72"
+                spellCheck={false}
+              />
+            </div>
           </div>
+          {teams.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3 mb-4 font-mono text-[10px] tracking-[0.15em]">
+              <button
+                onClick={async () => {
+                  const r = await setAttendanceBulkMutation({ token, present: true });
+                  if (r.ok) setRosterMsg(`All ${r.count} teams marked PRESENT.`);
+                }}
+                className="border border-sage/40 text-sage px-4 py-2.5 hover:bg-sage/10 transition-colors"
+              >
+                MARK ALL PRESENT
+              </button>
+              <button
+                onClick={async () => {
+                  const r = await setAttendanceBulkMutation({ token, present: false });
+                  if (r.ok) setRosterMsg(`Attendance cleared for all ${r.count} teams.`);
+                }}
+                className="border border-line text-mut hover:text-ink px-4 py-2.5 transition-colors"
+              >
+                CLEAR ATTENDANCE
+              </button>
+              <button
+                onClick={() =>
+                  downloadCsv("operation-zero-hour-roster.csv", [
+                    ["Team Name", "Team ID", "Password", "Members", "Attendance"],
+                    ...teams.map((t) => [
+                      t.teamName,
+                      t.teamCode,
+                      t.passwordPlain ?? "",
+                      t.members.map((m) => m.name).join(" | "),
+                      t.attendance === true ? "PRESENT" : t.attendance === false ? "ABSENT" : "-",
+                    ]),
+                  ])
+                }
+                className="border border-line text-mut hover:text-ink px-4 py-2.5 transition-colors"
+              >
+                DOWNLOAD ROSTER CSV
+              </button>
+              {rosterMsg && <span className="text-sage">{rosterMsg}</span>}
+            </div>
+          )}
           {teams.length === 0 ? (
             <p className="font-mono text-xs text-mut">No teams yet. Upload the Excel above.</p>
           ) : filteredTeams.length === 0 ? (
@@ -411,6 +459,7 @@ function TeamsTab({ token }: { token: string }) {
               <table className="w-full font-mono text-xs">
                 <thead>
                   <tr className="text-left text-mut border-b border-linesoft">
+                    <th className="px-4 py-2.5 font-normal">ATTENDANCE</th>
                     <th className="px-4 py-2.5 font-normal">TEAM ID</th>
                     <th className="px-4 py-2.5 font-normal">NAME</th>
                     <th className="px-4 py-2.5 font-normal">PASSWORD</th>
@@ -421,6 +470,21 @@ function TeamsTab({ token }: { token: string }) {
                 <tbody>
                   {filteredTeams.map((t) => (
                     <tr key={t.teamCode} className="border-b border-linesoft align-top">
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={async () => {
+                            await setAttendanceMutation({ token, teamCode: t.teamCode, present: t.attendance !== true });
+                          }}
+                          className={`inline-flex items-center gap-2 border px-3 py-1.5 text-[10px] tracking-[0.2em] transition-colors ${
+                            t.attendance === true
+                              ? "border-sage/50 text-sage hover:bg-sage/10"
+                              : "border-line text-mut hover:text-ink"
+                          }`}
+                        >
+                          <span className={`inline-block h-1.5 w-1.5 rounded-full ${t.attendance === true ? "bg-sage" : "bg-[#3d3d3d]"}`} />
+                          {t.attendance === true ? "PRESENT" : "ABSENT"}
+                        </button>
+                      </td>
                       <td className="px-4 py-3 text-amber whitespace-nowrap">{t.teamCode}</td>
                       <td className="px-4 py-3">{t.teamName}</td>
                       <td className="px-4 py-3 text-ink select-all">{t.passwordPlain ?? "—"}</td>

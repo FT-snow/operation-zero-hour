@@ -22,6 +22,7 @@ export const listAdmin = query({
         teamCode: t.teamCode,
         teamName: t.teamName,
         passwordPlain: t.passwordPlain, // admin desk lookup only
+        attendance: t.attendance,
         createdAt: t.createdAt,
         members,
       });
@@ -224,7 +225,47 @@ export const resetTestState = mutation({
   },
 });
 
-// Backfill plaintext copies from the real generation output.
+// ---------- Attendance ----------
+export const setAttendance = mutation({
+  args: { token: v.string(), teamCode: v.string(), present: v.boolean() },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const code = args.teamCode.trim().toUpperCase();
+    const team = await ctx.db
+      .query("teams")
+      .withIndex("by_teamCode", (q) => q.eq("teamCode", code))
+      .unique();
+    if (!team) return { ok: false as const, error: "Team not found" };
+    await ctx.db.patch(team._id, { attendance: args.present });
+    await audit(ctx, {
+      action: "teams.setAttendance",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: `${code} marked ${args.present ? "PRESENT" : "ABSENT"}`,
+    });
+    return { ok: true as const };
+  },
+});
+
+export const setAttendanceBulk = mutation({
+  args: { token: v.string(), present: v.boolean() },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const teams = await ctx.db.query("teams").withIndex("by_teamCode").collect();
+    for (const t of teams) {
+      if (t.attendance !== args.present) await ctx.db.patch(t._id, { attendance: args.present });
+    }
+    await audit(ctx, {
+      action: "teams.setAttendanceBulk",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: `All ${teams.length} team(s) marked ${args.present ? "PRESENT" : "ABSENT"}`,
+    });
+    return { ok: true as const, count: teams.length };
+  },
+});
+
+// ---------- Backfill ----------
 // Integrity-checked: only stores a plaintext whose hash matches the stored hash.
 export const backfillPasswords = mutation({
   args: {
