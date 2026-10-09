@@ -58,6 +58,17 @@ export default function FoodTab({ token }: { token: string }) {
     return <p className="font-mono text-xs text-mut blink tracking-[0.25em]">LOADING FOOD DESK...</p>;
   }
 
+  // master kitchen tally: summed quantities per item across every order
+  const kitchenTally = (() => {
+    const tally = new Map<string, number>();
+    for (const o of orders.orders) {
+      for (const i of o.items as { qty: number; name: string }[]) {
+        tally.set(i.name, (tally.get(i.name) ?? 0) + i.qty);
+      }
+    }
+    return Array.from(tally.entries()).sort((a, b) => b[1] - a[1]);
+  })();
+
   const rows = Array.from({ length: 40 }, (_, i) => i + 1);
 
   return (
@@ -270,6 +281,11 @@ export default function FoodTab({ token }: { token: string }) {
                     ]);
                   }
                   rowsOut.push(["", "", "", orders.revenue, "--- GRAND TOTAL ---"]);
+                  rowsOut.push([]);
+                  rowsOut.push(["KITCHEN TALLY (restaurant handoff)"]);
+                  rowsOut.push(["Item", "Total Qty"]);
+                  for (const [name, qty] of kitchenTally) rowsOut.push([`${qty}x`, name]);
+
                   downloadCsv("operation-zero-hour-food-orders.csv", rowsOut);
                 }}
                 className="border border-line text-mut hover:text-ink px-4 py-2.5 transition-colors"
@@ -278,6 +294,20 @@ export default function FoodTab({ token }: { token: string }) {
               </button>
             </div>
           </div>
+          {kitchenTally.length > 0 && (
+            <div className="border border-amber/40 bg-amber/5 px-5 py-4 mb-5">
+              <p className="font-mono text-[10px] tracking-[0.2em] text-amber mb-2">
+                KITCHEN TALLY - TOTALS ACROSS ALL {orders.orders.length} ORDER(S)
+              </p>
+              <div className="flex flex-wrap gap-3 font-mono text-[11px]">
+                {kitchenTally.map(([name, qty]) => (
+                  <span key={name} className="text-ink">
+                    <span className="text-amber font-bold">{qty}x</span> {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           {orders.orders.length === 0 ? (
             <p className="font-mono text-xs text-mut">No orders yet.</p>
           ) : (
