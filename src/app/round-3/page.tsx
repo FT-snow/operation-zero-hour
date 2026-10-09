@@ -58,16 +58,34 @@ export default function Round3Page() {
               </Link>
             </div>
           </FadeIn>
-        ) : data.videos.length === 0 ? (
-          <p className="font-mono text-xs text-mut">No tapes uploaded yet.</p>
         ) : (
-          <Stagger className="grid md:grid-cols-2 gap-6">
-            {data.videos.map((v, i) => {
-              const revealed = revealedIdx.includes(i);
-              return (
-                <div key={v.order} className="border border-linesoft hover:border-line transition-colors">
-                  <div className="aspect-video bg-[#070707] border-b border-linesoft flex items-center justify-center">
-                    {revealed && v.embedUrl ? (
+          <div className="space-y-10">
+            {data.driveUrl && (
+              <FadeIn>
+                <a
+                  href={data.driveUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="block border border-linesoft hover:border-line transition-colors px-8 py-10 group"
+                >
+                  <p className="font-mono text-[10px] tracking-[0.3em] text-mut mb-3">EVIDENCE REVEALED</p>
+                  <p className="font-display text-3xl md:text-4xl mb-3 group-hover:text-white transition-colors">
+                    Open the Evidence Drive
+                  </p>
+                  <p className="font-mono text-xs text-mut">
+                    ALL FIVE TAPES ARE WAITING IN THIS ARCHIVE &gt;
+                  </p>
+                </a>
+              </FadeIn>
+            )}
+            {data.videos.length > 0 && (
+              <Stagger className="grid md:grid-cols-2 gap-6">
+                {data.videos.map((v, i) => {
+                  const revealed = revealedIdx.includes(i);
+                  return (
+                    <div key={v.order} className="border border-linesoft hover:border-line transition-colors">
+                      <div className="aspect-video bg-[#070707] border-b border-linesoft flex items-center justify-center">
+                        {revealed && v.embedUrl ? (
                       <iframe
                         src={v.embedUrl}
                         title={v.title}
@@ -97,6 +115,8 @@ export default function Round3Page() {
               );
             })}
           </Stagger>
+            )}
+          </div>
         )}
       </section>
     </main>

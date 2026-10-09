@@ -15,10 +15,11 @@ export const listVideos = query({
     const revealed = round?.videosRevealed ?? false;
     const visible = (status === "live" || status === "closed") && revealed;
     if (!visible) {
-      // Locked state - never leak video list
-      return { locked: true as const, status, revealed, videos: [] };
+      // Locked state - never leak video list or drive link
+      return { locked: true as const, status, revealed, videos: [], driveUrl: null };
     }
     const vids = await ctx.db.query("videos").withIndex("by_order").collect();
+    const cfg = await ctx.db.query("config").first();
     return {
       locked: false as const,
       status,
@@ -26,6 +27,7 @@ export const listVideos = query({
       videos: vids
         .sort((a, b) => a.order - b.order)
         .map((v) => ({ order: v.order, title: v.title, caption: v.caption, embedUrl: v.embedUrl })),
+      driveUrl: cfg?.round3DriveUrl ?? null,
     };
   },
 });

@@ -95,6 +95,7 @@ export default defineSchema({
     realKiller: v.optional(v.string()),
     suspects: v.optional(v.array(v.string())),
     round4DriveUrl: v.optional(v.string()),
+    round3DriveUrl: v.optional(v.string()),
   }),
 
   audit_log: defineTable({

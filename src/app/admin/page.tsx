@@ -580,6 +580,7 @@ function RoundsTab({ token }: { token: string }) {
   const setCode = useMutation(api.rounds.setRound4Code);
   const setKiller = useMutation(api.rounds.setRealKiller);
   const setVideo = useMutation(api.rounds.setVideo);
+  const setDrive3Url = useMutation(api.rounds.setRound3DriveUrl);
   const setDriveUrl = useMutation(api.rounds.setRound4DriveUrl);
 
   const [codeInput, setCodeInput] = useState("");
@@ -587,6 +588,7 @@ function RoundsTab({ token }: { token: string }) {
   const [suspectsInput, setSuspectsInput] = useState("");
   const [msg, setMsg] = useState("");
   const [videoDraft, setVideoDraft] = useState<Record<number, { title: string; caption: string; embedUrl: string }>>({});
+  const [drive3Input, setDrive3Input] = useState("");
   const [driveInput, setDriveInput] = useState("");
 
   if (!roundsData || !config) {
@@ -708,6 +710,28 @@ function RoundsTab({ token }: { token: string }) {
                 <p className="font-mono text-[10px] tracking-[0.2em] text-mut mb-4">
                   EVIDENCE TAPES {r.videosRevealed ? "- CURRENTLY REVEALED TO TEAMS" : "- HIDDEN UNTIL REVEAL PRESSED"}
                 </p>
+                <div className="flex gap-3 mb-5">
+                  <input
+                    value={drive3Input}
+                    onChange={(e) => setDrive3Input(e.target.value)}
+                    placeholder="HTTPS://DRIVE.GOOGLE.COM/... (SHARED ON REVEAL)"
+                    className="field font-mono text-[11px] px-4 py-2.5 flex-1"
+                    spellCheck={false}
+                  />
+                  <button
+                    onClick={async () => {
+                      setMsg("");
+                      const res = await setDrive3Url({ token, url: drive3Input.trim() });
+                      if (res.ok) {
+                        setDrive3Input("");
+                        setMsg("Round 3 drive link saved.");
+                      } else setMsg(res.error);
+                    }}
+                    className="border border-line font-mono text-[10px] tracking-[0.2em] px-5 py-2.5 hover:bg-ink hover:text-bg transition-colors shrink-0"
+                  >
+                    SAVE LINK
+                  </button>
+                </div>
                 <div className="space-y-3">
                   {[1, 2, 3, 4, 5].map((order) => {
                     const existing = videos?.videos.find((v) => v.order === order);
