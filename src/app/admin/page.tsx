@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { clearSession, getToken } from "@/lib/session";
 import { FadeIn } from "@/components/fade";
+import FoodTab from "@/components/food-tab";
 import * as XLSX from "xlsx";
 import Papa from "papaparse";
 
@@ -17,12 +18,13 @@ type PreviewGroup = {
 
 type Cred = { teamName: string; teamCode: string; password: string; members: string[] };
 
-type Tab = "teams" | "rounds" | "results" | "logs";
+type Tab = "teams" | "rounds" | "results" | "food" | "logs";
 
 const TAB_NAMES: Record<Tab, string> = {
   teams: "TEAMS",
   rounds: "ROUNDS",
   results: "RESULTS",
+  food: "FOOD",
   logs: "LOGS",
 };
 
@@ -70,7 +72,7 @@ function AdminInner({ token }: { token: string }) {
     router.replace("/admin/login");
   }
 
-  const tabs: Tab[] = ["teams", "rounds", "results", "logs"];
+  const tabs: Tab[] = ["teams", "rounds", "results", "food", "logs"];
 
   return (
     <main className="min-h-screen">
@@ -110,6 +112,7 @@ function AdminInner({ token }: { token: string }) {
         {tab === "teams" && <TeamsTab token={token} />}
         {tab === "rounds" && <RoundsTab token={token} />}
         {tab === "results" && <ResultsTab token={token} />}
+        {tab === "food" && <FoodTab token={token} />}
         {tab === "logs" && <LogsTab token={token} />}
       </div>
     </main>

@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as food from "../food.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_hash from "../lib/hash.js";
 import type * as lib_sha256 from "../lib/sha256.js";
@@ -28,6 +29,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  food: typeof food;
   "lib/auth": typeof lib_auth;
   "lib/hash": typeof lib_hash;
   "lib/sha256": typeof lib_sha256;

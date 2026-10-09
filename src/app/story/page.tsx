@@ -159,9 +159,29 @@ export default function StoryPage() {
               </Link>
             ) : (
               <div key={r.roundNumber}>{body}</div>
-            );
-          })}
-        </Stagger>
+             );
+           })}
+         </Stagger>
+
+        <FadeIn delay={0.2}>
+          <Link
+            href="/food"
+            className="group block border border-linesoft hover:border-line transition-colors px-6 md:px-10 py-7 mt-10 flex items-center justify-between"
+          >
+            <div className="flex items-baseline gap-4">
+              <span className="font-display text-5xl text-[#242424] leading-none select-none">++</span>
+              <div>
+                <h2 className="font-display text-2xl md:text-3xl tracking-tight">Food Order</h2>
+                <p className="font-mono text-[10px] tracking-[0.2em] text-mut mt-1">
+                  ONE ORDER PER TEAM - SCAN THE QR TO PAY
+                </p>
+              </div>
+            </div>
+            <span className="font-mono text-[10px] tracking-[0.2em] text-mut group-hover:text-ink border border-line px-3 py-2 transition-colors">
+              ORDER &gt;
+            </span>
+          </Link>
+        </FadeIn>
       </section>
 
       <footer className="border-t border-linesoft">

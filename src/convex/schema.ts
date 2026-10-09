@@ -96,7 +96,26 @@ export default defineSchema({
     suspects: v.optional(v.array(v.string())),
     round4DriveUrl: v.optional(v.string()),
     round3DriveUrl: v.optional(v.string()),
+    restaurantName: v.optional(v.string()),
+    upiVpa: v.optional(v.string()),
+    payLink: v.optional(v.string()),
+    foodNote: v.optional(v.string()),
   }),
+
+  menu_items: defineTable({
+    order: v.number(), // 1..N row order
+    name: v.string(),
+    price: v.number(), // rupees, integer
+    veg: v.boolean(),
+  }).index("by_order", ["order"]),
+
+  orders: defineTable({
+    teamId: v.id("teams"),
+    items: v.array(v.object({ name: v.string(), qty: v.number(), price: v.number() })),
+    total: v.number(),
+    status: v.string(), // "placed"
+    placedAt: v.number(),
+  }).index("by_team", ["teamId"]),
 
   audit_log: defineTable({
     action: v.string(),

@@ -6,7 +6,7 @@ export function middleware(req: NextRequest) {
   const token = req.cookies.get("ozh_token")?.value;
   const role = req.cookies.get("ozh_role")?.value;
 
-  const teamPages = ["/story", "/round-3", "/round-4", "/round-5"];
+  const teamPages = ["/story", "/round-3", "/round-4", "/round-5", "/food"];
   const adminPages = ["/admin"];
 
   // Team pages: need team-role session
@@ -42,5 +42,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/story/:path*", "/round-3/:path*", "/round-4/:path*", "/round-5/:path*", "/admin/:path*", "/admin"],
+  matcher: ["/story/:path*", "/round-3/:path*", "/round-4/:path*", "/round-5/:path*", "/food/:path*", "/admin/:path*", "/admin"],
 };
