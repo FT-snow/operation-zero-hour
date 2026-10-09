@@ -100,6 +100,7 @@ export default defineSchema({
     upiVpa: v.optional(v.string()),
     payLink: v.optional(v.string()),
     foodNote: v.optional(v.string()),
+    foodEnabled: v.optional(v.boolean()),
   }),
 
   menu_items: defineTable({
@@ -107,14 +108,19 @@ export default defineSchema({
     name: v.string(),
     price: v.number(), // rupees, integer
     veg: v.boolean(),
+    cat: v.optional(v.string()), // e.g. PIZZA | WRAPS | FRIES | SHAKES | DRINKS
   }).index("by_order", ["order"]),
 
   orders: defineTable({
     teamId: v.id("teams"),
     items: v.array(v.object({ name: v.string(), qty: v.number(), price: v.number() })),
+    subtotal: v.number(),
+    deliveryCharge: v.number(),
     total: v.number(),
-    status: v.string(), // "placed"
+    status: v.string(), // "awaiting_payment" | "confirmed"
     placedAt: v.number(),
+    transactionId: v.optional(v.string()),
+    paymentScreenshotId: v.optional(v.id("_storage")),
   }).index("by_team", ["teamId"]),
 
   audit_log: defineTable({

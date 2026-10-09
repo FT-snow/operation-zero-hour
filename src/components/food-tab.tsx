@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Papa from "papaparse";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FadeIn } from "@/components/fade";
 
 // Full server timestamp with millisecond precision
@@ -35,14 +35,24 @@ export default function FoodTab({ token }: { token: string }) {
   const [vpaInput, setVpaInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
   const [noteInput, setNoteInput] = useState("");
-  const [itemDraft, setItemDraft] = useState<Record<number, { name: string; price: string; veg: boolean }>>({});
+  const [foodEnabledInput, setFoodEnabledInput] = useState(cfg?.foodEnabled ?? false);
+  const [itemDraft, setItemDraft] = useState<Record<number, { name: string; price: string; veg: boolean; cat: string }>>({});
   const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (!cfg) return;
+    setRnameInput((value) => value || cfg.restaurantName);
+    setVpaInput((value) => value || cfg.upiVpa);
+    setLinkInput((value) => value || cfg.payLink);
+    setNoteInput((value) => value || cfg.foodNote);
+    setFoodEnabledInput(cfg.foodEnabled);
+  }, [cfg]);
 
   if (!cfg || !menu || !orders) {
     return <p className="font-mono text-xs text-mut blink tracking-[0.25em]">LOADING FOOD DESK...</p>;
   }
 
-  const rows = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  const rows = Array.from({ length: 40 }, (_, i) => i + 1);
 
   return (
     <div className="space-y-6">
@@ -85,6 +95,15 @@ export default function FoodTab({ token }: { token: string }) {
               className="field font-mono text-[11px] px-4 py-2.5"
             />
           </div>
+          <label className="mt-4 flex items-center gap-3 font-mono text-[10px] tracking-[0.2em] text-mut">
+            <input
+              type="checkbox"
+              checked={foodEnabledInput}
+              onChange={(event) => setFoodEnabledInput(event.target.checked)}
+              className="accent-[#f5f4f0]"
+            />
+            UNLOCK FOOD ORDERING FOR TEAMS
+          </label>
           <button
             onClick={async () => {
               setMsg("");
@@ -94,8 +113,9 @@ export default function FoodTab({ token }: { token: string }) {
                 upiVpa: vpaInput,
                 payLink: linkInput,
                 foodNote: noteInput,
+                foodEnabled: foodEnabledInput,
               });
-              if (res.ok) {
+                      if (res.ok) {
                 setRnameInput(""); setVpaInput(""); setLinkInput(""); setNoteInput("");
                 setMsg("Restaurant config saved.");
               } else setMsg(res.error);
@@ -118,9 +138,10 @@ export default function FoodTab({ token }: { token: string }) {
                 name: existing?.name ?? "",
                 price: existing ? String(existing.price) : "",
                 veg: existing?.veg ?? true,
+                cat: existing?.cat ?? "",
               };
               return (
-                <div key={order} className="grid grid-cols-[24px_1fr_110px_auto_auto] gap-2 items-center">
+                <div key={order} className="grid grid-cols-[24px_1fr_110px_110px_auto_auto] gap-2 items-center">
                   <span className="font-mono text-xs text-mut">{String(order).padStart(2, "0")}</span>
                   <input
                     value={d.name}
@@ -135,6 +156,12 @@ export default function FoodTab({ token }: { token: string }) {
                     className="field font-mono text-[11px] px-3 py-2"
                     spellCheck={false}
                   />
+                  <input
+                    value={d.cat}
+                    onChange={(e) => setItemDraft((p) => ({ ...p, [order]: { ...d, cat: e.target.value } }))}
+                    placeholder="SECTION"
+                    className="field font-mono text-[10px] px-3 py-2 uppercase"
+                  />
                   <button
                     onClick={() => setItemDraft((p) => ({ ...p, [order]: { ...d, veg: !d.veg } }))}
                     className={`border px-3 py-2 font-mono text-[10px] tracking-[0.15em] transition-colors ${
@@ -146,7 +173,7 @@ export default function FoodTab({ token }: { token: string }) {
                   <button
                     onClick={async () => {
                       setMsg("");
-                      const res = await setItem({ token, order, name: d.name, price: parseInt(d.price || "0", 10), veg: d.veg });
+                      const res = await setItem({ token, order, name: d.name, price: parseInt(d.price || "0", 10), veg: d.veg, cat: d.cat || "MENU" });
                       if (res.ok) { setItemDraft((p) => { const n = { ...p }; delete n[order]; return n; }); setMsg("Menu saved."); }
                       else setMsg(res.error);
                     }}
@@ -171,13 +198,18 @@ export default function FoodTab({ token }: { token: string }) {
               <span className="text-amber">REVENUE: Rs. {orders.revenue}</span>
               <button
                 onClick={() => {
-                  const rowsOut: (string | number)[][] = [["Team ID", "Team Name", "Items", "Total (Rs)", "Placed At"]];
+                  const rowsOut: (string | number)[][] = [["Team ID", "Team Name", "Items", "Subtotal (Rs)", "Delivery (Rs)", "Total (Rs)", "Status", "Transaction ID", "Screenshot URL", "Placed At"]];
                   for (const o of orders.orders) {
                     rowsOut.push([
                       o.teamCode,
                       o.teamName,
                       o.items.map((i: { qty: number; name: string }) => `${i.qty}x ${i.name}`).join(" | "),
+                      o.subtotal,
+                      o.deliveryCharge,
                       o.total,
+                      o.status,
+                      o.transactionId,
+                      o.paymentScreenshotUrl ?? "",
                       new Date(o.placedAt).toISOString(),
                     ]);
                   }
@@ -199,7 +231,12 @@ export default function FoodTab({ token }: { token: string }) {
                   <tr>
                     <th className="px-4 py-2.5 font-normal">TEAM</th>
                     <th className="px-4 py-2.5 font-normal">ORDER</th>
+                    <th className="px-4 py-2.5 font-normal">SUBTOTAL</th>
+                    <th className="px-4 py-2.5 font-normal">DELIVERY</th>
                     <th className="px-4 py-2.5 font-normal">TOTAL</th>
+                    <th className="px-4 py-2.5 font-normal">STATUS</th>
+                    <th className="px-4 py-2.5 font-normal">TRANSACTION</th>
+                    <th className="px-4 py-2.5 font-normal">PROOF</th>
                     <th className="px-4 py-2.5 font-normal">PLACED AT (UTC)</th>
                     <th className="px-4 py-2.5 font-normal text-right">REOPEN</th>
                   </tr>
@@ -214,7 +251,12 @@ export default function FoodTab({ token }: { token: string }) {
                       <td className="px-4 py-3 text-mut max-w-md">
                         {o.items.map((i: { qty: number; name: string; price: number }) => `${i.qty}x ${i.name} (Rs.${i.price})`).join(", ")}
                       </td>
+                      <td className="px-4 py-3">Rs. {o.subtotal}</td>
+                      <td className="px-4 py-3">Rs. {o.deliveryCharge}</td>
                       <td className="px-4 py-3">Rs. {o.total}</td>
+                      <td className={`px-4 py-3 ${o.status === "confirmed" ? "text-sage" : "text-amber"}`}>{o.status.toUpperCase()}</td>
+                      <td className="px-4 py-3 text-mut">{o.transactionId || "-"}</td>
+                      <td className="px-4 py-3">{o.paymentScreenshotUrl ? <a href={o.paymentScreenshotUrl} target="_blank" rel="noreferrer" className="text-amber hover:text-ink">OPEN</a> : "-"}</td>
                       <td className="px-4 py-3 text-mut whitespace-nowrap">{stamp(o.placedAt)}</td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -234,9 +276,9 @@ export default function FoodTab({ token }: { token: string }) {
                 </tbody>
                 <tfoot className="sticky bottom-0 bg-[#0d0d0d]">
                   <tr className="text-ink">
-                    <td className="px-4 py-3 font-mono text-xs" colSpan={2}>GRAND TOTAL</td>
+                    <td className="px-4 py-3 font-mono text-xs" colSpan={5}>GRAND TOTAL</td>
                     <td className="px-4 py-3 font-mono text-xs">Rs. {orders.revenue}</td>
-                    <td colSpan={2} />
+                    <td colSpan={5} />
                   </tr>
                 </tfoot>
               </table>

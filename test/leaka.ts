@@ -5,7 +5,7 @@ import { readFileSync } from "fs";
 const SECRETS = [
   "nasa", "aayan", "adarsh", "kratika", "abhilasha", "snehil", "shailey",
   "passwordplain", "passwordhash", "round4codehash", "round4codesalt",
-  "drivetechs", "drive-folder", "drive.google", "admin@", "ozh.event",
+  "drivetechs", "drive-folder", "admin@", "ozh.event",
   "neha", "bathroom", "scandal", "sister", "bathtub", "drowned",
 ];
 
@@ -42,6 +42,14 @@ async function main() {
     for (const s of SECRETS) {
       if (payload.includes(s)) { violate(); console.log(`LEAK ${fn}: contains "${s}"`); }
     }
+  }
+  const videos = await c.query("videos:listVideos" as never, { token: tk } as never) as {
+    locked: boolean;
+    driveUrl: string | null;
+  };
+  if (!videos.locked || videos.driveUrl !== null) {
+    violate();
+    console.log("LEAK videos:listVideos: Round 3 content was not sealed");
   }
   // unauthenticated baseline
   for (const [fn] of fns) {
