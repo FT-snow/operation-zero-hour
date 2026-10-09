@@ -19,6 +19,8 @@ export const configFoodGet = query({
       foodNote: cfg?.foodNote ?? "",
       foodEnabled: cfg?.foodEnabled ?? false,
       deliveryCharge: DELIVERY_CHARGE,
+      paymentQrUrl: cfg?.paymentQrId ? await ctx.storage.getUrl(cfg.paymentQrId) : null,
+      paymentEvidenceDriveUrl: cfg?.paymentEvidenceDriveUrl ?? "",
     };
   },
 });
@@ -31,6 +33,7 @@ export const setFoodConfig = mutation({
     payLink: v.string(),
     foodNote: v.string(),
     foodEnabled: v.boolean(),
+    paymentEvidenceDriveUrl: v.string(),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdminByToken(ctx, args.token);
@@ -53,6 +56,7 @@ export const setFoodConfig = mutation({
       payLink,
       foodNote: args.foodNote.trim(),
       foodEnabled: args.foodEnabled,
+      paymentEvidenceDriveUrl: args.paymentEvidenceDriveUrl.trim(),
     };
     if (cfg) await ctx.db.patch(cfg._id, patch);
     else await ctx.db.insert("config", patch);
@@ -62,6 +66,34 @@ export const setFoodConfig = mutation({
       adminId: admin._id,
       adminLabel: admin.email,
       details: `Food ordering ${args.foodEnabled ? "enabled" : "disabled"}: ${restaurantName}`,
+    });
+    return { ok: true as const };
+  },
+});
+
+export const generatePaymentQrUploadUrl = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdminByToken(ctx, args.token);
+    return { ok: true as const, uploadUrl: await ctx.storage.generateUploadUrl() };
+  },
+});
+
+export const setPaymentQr = mutation({
+  args: { token: v.string(), paymentQrId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const cfg = await ctx.db.query("config").first();
+    if (!cfg) {
+      await ctx.db.insert("config", { paymentQrId: args.paymentQrId });
+    } else {
+      await ctx.db.patch(cfg._id, { paymentQrId: args.paymentQrId });
+    }
+    await audit(ctx, {
+      action: "food.setPaymentQr",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: "Payment QR uploaded and attached to the food menu",
     });
     return { ok: true as const };
   },
@@ -217,6 +249,7 @@ export const listFood = query({
         payLink: "",
         foodNote: cfg?.foodNote ?? "",
         deliveryCharge: DELIVERY_CHARGE,
+      paymentQrUrl: null,
         items: [],
         myOrder: order ? { status: order.status, subtotal: order.subtotal, deliveryCharge: order.deliveryCharge, total: order.total, items: order.items, placedAt: order.placedAt } : null,
       };
@@ -233,6 +266,7 @@ export const listFood = query({
       payLink: cfg?.payLink ?? "",
       foodNote: cfg?.foodNote ?? "",
       deliveryCharge: DELIVERY_CHARGE,
+      paymentQrUrl: cfg?.paymentQrId ? await ctx.storage.getUrl(cfg.paymentQrId) : null,
       items,
       myOrder: order
         ? {

@@ -101,6 +101,8 @@ export default defineSchema({
     payLink: v.optional(v.string()),
     foodNote: v.optional(v.string()),
     foodEnabled: v.optional(v.boolean()),
+    paymentQrId: v.optional(v.id("_storage")),
+    paymentEvidenceDriveUrl: v.optional(v.string()),
   }),
 
   menu_items: defineTable({

@@ -30,11 +30,16 @@ export default function FoodTab({ token }: { token: string }) {
   const setConfig = useMutation(api.food.setFoodConfig);
   const setItem = useMutation(api.food.setMenuItem);
   const resetOrderMut = useMutation(api.food.resetOrder);
+  const generateQrUploadUrl = useMutation(api.food.generatePaymentQrUploadUrl);
+  const setPaymentQr = useMutation(api.food.setPaymentQr);
 
   const [rnameInput, setRnameInput] = useState("");
   const [vpaInput, setVpaInput] = useState("");
   const [linkInput, setLinkInput] = useState("");
   const [noteInput, setNoteInput] = useState("");
+  const [evidenceDriveInput, setEvidenceDriveInput] = useState("");
+  const [qrFile, setQrFile] = useState<File | null>(null);
+  const [qrBusy, setQrBusy] = useState(false);
   const [foodEnabledInput, setFoodEnabledInput] = useState(cfg?.foodEnabled ?? false);
   const [itemDraft, setItemDraft] = useState<Record<number, { name: string; price: string; veg: boolean; cat: string }>>({});
   const [msg, setMsg] = useState("");
@@ -45,6 +50,7 @@ export default function FoodTab({ token }: { token: string }) {
     setVpaInput((value) => value || cfg.upiVpa);
     setLinkInput((value) => value || cfg.payLink);
     setNoteInput((value) => value || cfg.foodNote);
+    setEvidenceDriveInput((value) => value || cfg.paymentEvidenceDriveUrl);
     setFoodEnabledInput(cfg.foodEnabled);
   }, [cfg]);
 
@@ -114,8 +120,9 @@ export default function FoodTab({ token }: { token: string }) {
                 payLink: linkInput,
                 foodNote: noteInput,
                 foodEnabled: foodEnabledInput,
+                paymentEvidenceDriveUrl: evidenceDriveInput,
               });
-                      if (res.ok) {
+              if (res.ok) {
                 setRnameInput(""); setVpaInput(""); setLinkInput(""); setNoteInput("");
                 setMsg("Restaurant config saved.");
               } else setMsg(res.error);
@@ -124,6 +131,55 @@ export default function FoodTab({ token }: { token: string }) {
           >
             SAVE RESTAURANT
           </button>
+          <div className="mt-6 border-t border-linesoft pt-5">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-mut">PAYMENT QR IMAGE</p>
+            <p className="mt-2 font-mono text-xs leading-relaxed text-mut">
+              Upload the QR image here. It will appear on the team payment screen after ordering is unlocked.
+            </p>
+            {cfg.paymentQrUrl && <img src={cfg.paymentQrUrl} alt="Current payment QR" className="mt-4 h-32 w-32 bg-white p-1" />}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => setQrFile(event.target.files?.[0] ?? null)}
+                className="font-mono text-xs text-mut file:mr-3 file:border file:border-line file:bg-transparent file:px-3 file:py-2 file:font-mono file:text-xs file:text-ink"
+              />
+              <button
+                disabled={!qrFile || qrBusy}
+                onClick={async () => {
+                  if (!qrFile) return;
+                  setQrBusy(true);
+                  setMsg("");
+                  try {
+                    const upload = await generateQrUploadUrl({ token });
+                    const response = await fetch(upload.uploadUrl, {
+                      method: "POST",
+                      headers: { "Content-Type": qrFile.type || "image/png" },
+                      body: qrFile,
+                    });
+                    if (!response.ok) { setMsg("QR upload failed."); return; }
+                    const { storageId } = await response.json() as { storageId: string };
+                    await setPaymentQr({ token, paymentQrId: storageId as never });
+                    setMsg("Payment QR saved.");
+                    setQrFile(null);
+                  } catch { setMsg("QR upload failed. Try again."); }
+                  finally { setQrBusy(false); }
+                }}
+                className="border border-line px-4 py-2.5 font-mono text-[10px] tracking-[0.15em] text-mut hover:bg-ink hover:text-bg disabled:opacity-30"
+              >
+                {qrBusy ? "UPLOADING..." : "UPLOAD QR"}
+              </button>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <input
+                value={evidenceDriveInput}
+                onChange={(event) => setEvidenceDriveInput(event.target.value)}
+                placeholder="DRIVE FOLDER FOR SCREENSHOTS / QR BACKUP"
+                className="field min-w-[280px] flex-1 px-3 py-2.5 font-mono text-[11px]"
+              />
+              {evidenceDriveInput && <a href={evidenceDriveInput} target="_blank" rel="noreferrer" className="border border-line px-3 py-2.5 font-mono text-[10px] text-mut hover:text-ink">OPEN DRIVE</a>}
+            </div>
+          </div>
         </section>
       </FadeIn>
 

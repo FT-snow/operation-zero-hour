@@ -65,6 +65,10 @@ function FoodPageInner({ token }: { token: string }) {
       setQr(null);
       return;
     }
+    if (data.paymentQrUrl) {
+      setQr(data.paymentQrUrl);
+      return;
+    }
     const target = data.payLink
       ? data.payLink
       : data.upiVpa
