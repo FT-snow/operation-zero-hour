@@ -158,3 +158,39 @@ export const attemptsAdmin = query({
     return { attempts: out };
   },
 });
+
+// ---------- Admin: wipe attempt log (post-load-test hygiene / event start) ----------
+export const clearAttempts = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const rows = await ctx.db.query("round4_attempts").collect();
+    for (const r of rows) await ctx.db.delete(r._id);
+    await audit(ctx, {
+      action: "round4.clearAttempts",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: `Cleared ${rows.length} attempt log row(s)`,
+    });
+    return { ok: true as const, cleared: rows.length };
+  },
+});
+
+// ---------- Team: reward (gated drive link, replaces clue cards) ----------
+export const reward = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const team = await requireTeamByToken(ctx, args.token);
+    const progress = await ctx.db
+      .query("team_progress")
+      .withIndex("by_team", (q) => q.eq("teamId", team._id))
+      .unique();
+    const cleared = !!progress?.round4Cleared;
+    if (!cleared) {
+      // Locked: the drive link never leaves the server unearned
+      return { locked: true as const, cleared: false as const, driveUrl: null };
+    }
+    const cfg = await ctx.db.query("config").first();
+    return { locked: false as const, cleared: true as const, driveUrl: cfg?.round4DriveUrl ?? null };
+  },
+});

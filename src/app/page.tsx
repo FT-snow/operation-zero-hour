@@ -5,46 +5,47 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import Typewriter from "@/components/typewriter";
 import GsapScroller from "@/components/gsap-scroller";
+import { FadeIn } from "@/components/fade";
 
-const ROUNDS = [
+const CAST = [
   {
-    n: "01",
-    name: "The Scene",
-    tag: "PHYSICAL / IN-HALL",
-    body: "The scene is walked. Every footprint photographed, every mismatch catalogued. Investigate what the killer left behind.",
+    name: "Adarsh",
+    role: "THE BOYFRIEND",
+    body: "Handsome, charismatic, fiercely entitled. The campus power couple in public - a battleground of control behind closed doors, affection with a possessive edge.",
   },
   {
-    n: "02",
-    name: "The Statements",
-    tag: "PHYSICAL / IN-HALL",
-    body: "Statements taken. Truths bent. A story unfurls in the hall in real time - catch every contradiction.",
+    name: "Aayan",
+    role: "THE DEVOTED BEST FRIEND",
+    body: "The quiet constant in her storm. Carried her bags, heard her midnight tears, offered an unconditional shoulder whenever the weight became too heavy.",
   },
   {
-    n: "03",
-    name: "The Evidence Tapes",
-    tag: "DIGITAL / 5 TAPES",
-    body: "Five pieces of surveillance footage, dropped into your file. One of them lies. Watch with intent.",
+    name: "Kratika",
+    role: "THE CURRENT BEST FRIEND",
+    body: "Polished, glamorous, effortlessly stylish. Inseparable fixtures across campus for the past year - coordinated appearances, projected loyalty.",
   },
   {
-    n: "04",
-    name: "The Code",
-    tag: "DIGITAL / DEAD BOLT",
-    body: "Four characters stand between you and the truth. Speak the code and the bolt releases your clues - and the final round.",
+    name: "Abhilasha",
+    role: "THE ROOMMATE",
+    body: "Soft-spoken, emotionally fragile. Carrying the fresh grief of a four-year relationship, invited here by Neha to steady herself among friends.",
   },
   {
-    n: "05",
-    name: "The Accusation",
-    tag: "DIGITAL / ONE SHOT",
-    body: "Name the killer. State the method. Explain the motive. One report, filed once, server-timestamped. There are no retractions.",
+    name: "Snehil",
+    role: "THE SCHOOL FRIEND",
+    body: "From her childhood classrooms to the same university. Entire evening: restless, wired, barely touching his drink, checking his phone at every chime.",
+  },
+  {
+    name: "Shailey",
+    role: "THE ESTRANGED FRIEND",
+    body: "Once her closest companion in high school. Arrives on Snehil's arm after years of silence - a quiet reminder of bonds severed the day college began.",
   },
 ];
 
-const RULES = [
-  ["ENTRY", "One login per team, issued by the control room. No public registration."],
-  ["PACING", "Rounds open only on the control room's signal. Locked means locked - for everyone."],
-  ["THE CODE", "Round 4 grants passage to any team holding the right four characters."],
-  ["THE REPORT", "Round 5 files exactly once per team. Late is never, a tie breaks by server timestamp."],
-  ["CONDUCT", "Tampering with evidence - or the case file - ends the investigation. Yours."],
+const TIMELINE = [
+  ["11:00 AM", "The iron gates swing open. The weekend belongs to them."],
+  ["MIDNIGHT", "The music softens. The party fractures into whispers and shadows."],
+  ["3:00 - 4:00 AM", "The house falls completely still."],
+  ["3:45 AM", "A scream from the upper landing."],
+  ["AFTER", "Resuscitation futile. Perimeter secured. Gates locked. No outsider crossed the grounds."],
 ];
 
 export default function Home() {
@@ -61,7 +62,6 @@ export default function Home() {
       <section ref={heroRef} className="relative border-b border-linesoft">
         <header className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between font-mono text-[11px] tracking-[0.2em] text-mut">
           <span>CASE FILE // NO. 001</span>
-          <span className="hidden sm:inline">RESTRICTED ACCESS</span>
         </header>
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
@@ -107,101 +107,99 @@ export default function Home() {
         </div>
       </section>
 
-      {/* =================================== THE COMPETITION COSMOS */}
+      {/* =================================== PROLOGUE */}
       <section className="border-b border-linesoft">
         <div className="max-w-6xl mx-auto px-6 py-24 md:py-32">
           <p className="font-mono text-[11px] tracking-[0.25em] text-mut mb-10" data-reveal>
-            THE COMPETITION
+            PROLOGUE
           </p>
           <h2
-            className="font-display tracking-[-0.02em] leading-[1.02] max-w-4xl"
-            style={{ fontSize: "clamp(2.4rem, 5.4vw, 4.4rem)" }}
+            className="font-display tracking-[-0.02em] mb-14"
+            style={{ fontSize: "clamp(2.6rem, 6vw, 5rem)" }}
             data-reveal
           >
-            One competition. One dead body.
-            <br />
-            <span className="text-mut">Forty teams on the same trail.</span>
+            The Haven
           </h2>
-          <div className="hairline my-12 [transform-origin:left]" data-line-draw />
-          <div className="grid md:grid-cols-3 gap-x-12 gap-y-10 max-w-5xl">
-            {[
-              {
-                k: "THE WORLD",
-                v: "A noir evening staged as a real investigation: evidence scenes, live statements, sealed tapes, and a case that opens only on the control room's word.",
-              },
-              {
-                k: "THE FIELD",
-                v: "Every team fights the same timeline on the same case file. Solve what is placed before you - advance together, or stall together.",
-              },
-              {
-                k: "THE PROOF",
-                v: "Round 5 is a signed confession: suspect, method, motive. The record is permanent, the timestamp absolute, the verdict known only to the control room.",
-              },
-            ].map((c) => (
-              <div key={c.k} data-reveal>
-                <p className="font-mono text-[10px] tracking-[0.3em] text-blood mb-4">{c.k}</p>
-                <p className="font-mono text-xs text-mut leading-[1.9]">{c.v}</p>
+
+          <div className="max-w-3xl space-y-8">
+            <p className="font-mono text-xs md:text-sm text-mut leading-[2]" data-reveal>
+              When the third-year examinations finally ended, the city was left behind for an
+              isolated luxury villa nestled beyond the quiet outskirts. The heavy iron gates swung
+              open at 11:00 AM, and with the turn of a brass key, the weekend belonged entirely to
+              them. It was meant to be a sanctuary of relief - a private retreat to wash away
+              exhaustion with loud music, clinking glasses, and the easy laughter of shared youth.
+            </p>
+            <p className="font-mono text-xs md:text-sm text-mut leading-[2]" data-reveal>
+              At the center of gravity was <span className="text-ink">Neha</span>. Radiant, sharp,
+              and undeniably magnetic, she moved through the villa like someone who owned every room
+              she stepped into. To any stranger watching through the glass, it looked like an
+              enviable portrait of modern friendship. Yet beneath the curated playlists and polite
+              toasts, the air inside the villa carried a quiet, electric tension - a delicate web of
+              histories waiting for a single misstep.
+            </p>
+          </div>
+
+          <div className="hairline my-14 [transform-origin:left]" data-line-draw />
+
+          <p className="font-mono text-[11px] tracking-[0.25em] text-blood mb-10" data-reveal>
+            THE CIRCLE
+          </p>
+          <div className="grid sm:grid-cols-2 gap-px bg-linesoft border border-linesoft">
+            {CAST.map((p) => (
+              <div key={p.name} className="bg-black p-8" data-reveal>
+                <p className="font-mono text-[10px] tracking-[0.3em] text-blood mb-3">{p.role}</p>
+                <h3 className="font-display text-3xl tracking-tight mb-3">{p.name}</h3>
+                <p className="font-mono text-xs text-mut leading-[1.9]">{p.body}</p>
               </div>
             ))}
+          </div>
+
+          <div className="hairline my-14 [transform-origin:left]" data-line-draw />
+
+          <p className="font-mono text-[11px] tracking-[0.25em] text-mut mb-10" data-reveal>
+            THE QUIET HOURS
+          </p>
+          <div className="max-w-3xl space-y-0">
+            {TIMELINE.map(([t, v]) => (
+              <div key={t} className="border-t border-linesoft last:border-b" data-reveal>
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-10 px-1 py-5">
+                  <span className="font-mono text-[10px] tracking-[0.25em] text-ink w-28 shrink-0 pt-1">{t}</span>
+                  <span className="font-mono text-xs text-mut leading-[1.9]">{v}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="max-w-3xl mt-14 space-y-8">
+            <p className="font-mono text-xs md:text-sm text-mut leading-[2]" data-reveal>
+              When the guests reached the master suite, they found Neha inside the bathroom,
+              lifeless and unresponsive. Resuscitation was futile. The perimeter was secured, the
+              driveway gates remained locked, and no outsider had crossed the grounds.
+            </p>
+            <p className="font-mono text-xs md:text-sm leading-[2]" data-reveal>
+              <span className="text-ink">The answers do not lie outside these walls; they belong
+              to the people standing in this room.</span>
+            </p>
+            <p className="font-mono text-xs md:text-sm leading-[2]" data-reveal>
+              <span className="text-blood">Welcome to Zero Hour.</span>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* =================================== FIVE ROUNDS */}
-      <section className="border-b border-linesoft">
-        <div className="max-w-6xl mx-auto px-6 py-24 md:py-32">
-          <p className="font-mono text-[11px] tracking-[0.25em] text-mut mb-10" data-reveal>
-            THE PROTOCOL
-          </p>
-          <h2
-            className="font-display tracking-[-0.02em] mb-4"
-            style={{ fontSize: "clamp(2.4rem, 5.4vw, 4.4rem)" }}
-            data-reveal
-          >
-            Five doors.{" "}
-            <span className="text-mut">One truth.</span>
-          </h2>
-        </div>
-        <div className="max-w-6xl mx-auto px-6 pb-24 md:pb-32">
-          {ROUNDS.map((r) => (
-            <div
-              key={r.n}
-              className="relative border-t border-linesoft last:border-b group px-1 py-10 md:py-14"
-            >
-              <div
-                className="font-display absolute -top-6 right-2 md:right-8 text-[8rem] md:text-[11rem] text-[#101010] pointer-events-none select-none"
-                data-drift
-                style={{ willChange: "transform" }}
-              >
-                {r.n}
-              </div>
-              <div className="relative">
-                <p className="font-mono text-[10px] tracking-[0.3em] text-mut mb-3" data-reveal>
-                  ROUND {r.n} - {r.tag}
-                </p>
-                <h3
-                  className="font-display text-4xl md:text-6xl tracking-[-0.02em] mb-4 group-hover:text-ink"
-                  data-reveal
-                >
-                  {r.name}
-                </h3>
-                <p className="font-mono text-xs text-mut leading-[1.9] max-w-2xl" data-reveal>
-                  {r.body}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* =================================== RULES */}
+      {/* =================================== HOUSE RULES */}
       <section className="border-b border-linesoft">
         <div className="max-w-6xl mx-auto px-6 py-24 md:py-32">
           <p className="font-mono text-[11px] tracking-[0.25em] text-mut mb-10" data-reveal>
             HOUSE RULES
           </p>
           <div className="space-y-0 max-w-3xl">
-            {RULES.map(([k, v]) => (
+            {[
+              ["ENTRY", "One login per team, issued by the control room. No public registration."],
+              ["PACING", "Doors open only on the control room's signal. Locked means locked - for everyone."],
+              ["THE REPORT", "The accusation files exactly once per team. A tie breaks by server timestamp."],
+              ["CONDUCT", "Tampering with evidence - or the case file - ends the investigation. Yours."],
+            ].map(([k, v]) => (
               <div key={k} className="border-t border-linesoft last:border-b" data-reveal>
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-10 px-1 py-6">
                   <span className="font-mono text-[10px] tracking-[0.3em] text-ink w-32 shrink-0 pt-1">{k}</span>
@@ -233,22 +231,23 @@ export default function Home() {
             >
               ENTER THE CASE FILE
             </Link>
-            <span className="inline-flex items-center font-mono text-[10px] tracking-[0.25em] text-mut px-4">
-              TEAM CREDENTIALS ARE ISSUED BY THE CONTROL ROOM ONLY
-            </span>
+            <FadeIn delay={0.1}>
+              <span className="inline-flex items-center font-mono text-[10px] tracking-[0.25em] text-mut px-4 py-4">
+                TEAM CREDENTIALS ARE ISSUED BY THE CONTROL ROOM ONLY
+              </span>
+            </FadeIn>
           </div>
         </div>
       </section>
 
-      {/* =================================== FOOTER - credit at the exact bottom */}
+      {/* =================================== FOOTER */}
       <footer className="border-t border-linesoft">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <span className="font-mono text-[10px] tracking-[0.25em] text-mut">
             OPERATION ZERO HOUR - A MURDER MYSTERY COMPETITION
           </span>
           <span className="font-mono text-[10px] tracking-[0.25em] text-mut">
-            A WEBSITE BY{" "}
-            <span className="text-ink">SNOW</span>
+            A WEBSITE BY <span className="text-ink">SNOW</span>
           </span>
         </div>
       </footer>

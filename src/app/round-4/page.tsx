@@ -5,11 +5,9 @@ import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { getToken } from "@/lib/session";
-import Typewriter from "@/components/typewriter";
 import { FadeIn } from "@/components/fade";
 import { LockIcon, CheckIcon } from "@/components/icons";
 
-const BOTTLENECK = "Doors stay shut until someone speaks the right four characters.";
 
 export default function Round4Page() {
   const token = getToken();
@@ -19,7 +17,7 @@ export default function Round4Page() {
 
 function Round4Inner({ token }: { token: string }) {
   const status = useQuery(api.rounds.list, { token });
-  const clues = useQuery(api.round4.cluesGet, { token });
+  const reward = useQuery(api.round4.reward, { token });
   const submitCode = useMutation(api.round4.submitCode);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -29,7 +27,7 @@ function Round4Inner({ token }: { token: string }) {
 
   const round4 = status?.rounds.find((r) => r.roundNumber === 4);
   const roundStatus = round4?.status ?? "not_started";
-  const cleared = clues?.cleared ?? false;
+  const cleared = reward?.cleared ?? false;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -75,8 +73,7 @@ function Round4Inner({ token }: { token: string }) {
       <section className="max-w-3xl mx-auto px-6 py-20">
         <p className="font-mono text-[11px] tracking-[0.25em] text-mut mb-3">ROUND 4</p>
         <h1 className="font-display text-5xl md:text-7xl tracking-[-0.02em] mb-6">Dead Bolt</h1>
-        <Typewriter text={BOTTLENECK} className="font-mono text-sm text-mut" speed={38} startDelay={400} />
-        <div className="hairline my-12" />
+          <div className="hairline my-12" />
 
         <FadeIn>
           {cleared ? (
@@ -84,26 +81,28 @@ function Round4Inner({ token }: { token: string }) {
               <div className="border border-sage/40 px-8 py-7">
                 <div className="flex items-center gap-4 mb-4">
                   <CheckIcon size={20} className="text-sage" />
-                  <p className="font-mono text-[11px] tracking-[0.25em] text-sage">BOLT RELEASED</p>
+                  <p className="font-mono text-[11px] tracking-[0.25em] text-sage">EVIDENCE SECURE</p>
                 </div>
                 <p className="font-mono text-xs text-mut leading-relaxed max-w-lg">
-                  The lock accepted your code. Round 5 is now open to your team, and the case
-                  clues below have been unsealed. Handle them carefully.
+                  The lock accepted your code. The sealed evidence archive has been unlocked for
+                  your team below, and Round 5 is now open to your team.
                 </p>
               </div>
-              {clues && !clues.locked && clues.clues.length > 0 && (
-                <div className="space-y-5">
-                  <p className="font-mono text-[11px] tracking-[0.25em] text-mut">UNSEALED CLUES</p>
-                  {clues.clues.map((c) => (
-                    <div key={c.order} className="border border-linesoft px-7 py-6">
-                      <div className="flex items-baseline gap-4 mb-3">
-                        <span className="font-mono text-xs text-blood">{String(c.order).padStart(2, "0")}</span>
-                        <h3 className="font-display text-2xl tracking-tight">{c.title}</h3>
-                      </div>
-                      <p className="text-sm text-mut leading-relaxed whitespace-pre-wrap">{c.body}</p>
-                    </div>
-                  ))}
-                </div>
+              {reward && !reward.locked && reward.driveUrl && (
+                <a
+                  href={reward.driveUrl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="block border border-linesoft hover:border-line transition-colors px-8 py-10 group"
+                >
+                  <p className="font-mono text-[10px] tracking-[0.3em] text-mut mb-3">SEALED ARCHIVE</p>
+                  <p className="font-display text-3xl md:text-4xl mb-3 group-hover:text-white transition-colors">
+                    Open the Evidence Drive
+                  </p>
+                  <p className="font-mono text-xs text-mut">
+                    ALL MATERIALS FOR THE FINAL REPORT LIVE IN THIS ARCHIVE &gt;
+                  </p>
+                </a>
               )}
               <div className="flex items-center justify-between mt-12">
                 <span className="font-mono text-[10px] tracking-[0.2em] text-mut">ACCESS TO ROUND 05 GRANTED</span>

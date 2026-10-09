@@ -10,14 +10,6 @@ import { FadeIn, Stagger } from "@/components/fade";
 import { clearSession, getToken, getName } from "@/lib/session";
 import { useRouter } from "next/navigation";
 
-const BOTTLENECKS: Record<number, string> = {
-  1: "The scene has been walked. Every footprint photographed. What you see is what they left behind.",
-  2: "Statements taken. Truths bent. A story will unfurl in the hall - watch it carefully.",
-  3: "Five pieces of footage. One of them lies.",
-  4: "Doors stay shut until someone speaks the right four characters.",
-  5: "The final report may be filed exactly once. There are no retractions.",
-};
-
 const ROUND_NAMES: Record<number, string> = {
   1: "The Scene",
   2: "The Statements",
@@ -141,7 +133,7 @@ export default function StoryPage() {
                     )}
                   </div>
                   <p className="font-mono text-xs text-mut leading-relaxed max-w-xl">
-                    {locked ? "LOCKED - THE CONTROL ROOM HAS NOT OPENED THIS DOOR." : BOTTLENECKS[r.roundNumber]}
+                    {locked ? "LOCKED - THE CONTROL ROOM HAS NOT OPENED THIS DOOR." : r.roundNumber <= 2 ? "UNFOLDS IN THE HALL." : ""}
                   </p>
                 </div>
                 <div className="shrink-0 self-start md:self-center">

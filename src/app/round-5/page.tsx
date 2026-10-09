@@ -5,11 +5,8 @@ import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { getToken } from "@/lib/session";
-import Typewriter from "@/components/typewriter";
 import { FadeIn } from "@/components/fade";
 import { LockIcon } from "@/components/icons";
-
-const BOTTLENECK = "The final report may be filed exactly once. There are no retractions.";
 
 export default function Round5Page() {
   const token = getToken();
@@ -41,8 +38,6 @@ function Round5Inner({ token }: { token: string }) {
   const suspectList =
     suspects && !suspects.locked ? suspects.suspects.map((s) => s.toUpperCase()) : [];
 
-  const alreadySubmitted = mine.submitted;
-
   async function doSubmit() {
     setBusy(true);
     setError("");
@@ -63,9 +58,9 @@ function Round5Inner({ token }: { token: string }) {
     }
   }
 
-  // Success screen - shows own submission only
-  if (done || alreadySubmitted) {
-    const sub = alreadySubmitted ? mine : null;
+  // Filed report - immutable, view-only
+  if (done || mine.submitted) {
+    const at = mine.submitted ? mine.submittedAt : done?.at ?? 0;
     return (
       <main className="min-h-screen">
         <TopBar />
@@ -78,15 +73,15 @@ function Round5Inner({ token }: { token: string }) {
               </h1>
               <p className="font-mono text-xs text-mut leading-relaxed max-w-lg">
                 Filed at server time{" "}
-                {new Date((sub?.submittedAt ?? done?.at ?? 0)).toISOString().replace("T", " ").slice(0, 19)}
-                . No edits are possible. Results follow when the control room closes the case.
+                {new Date(at).toISOString().replace("T", " ").slice(0, 19)} UTC. No edits are
+                possible. Results follow when the control room closes the case.
               </p>
             </div>
-            {sub && (
+            {mine.submitted && (
               <div className="mt-10 space-y-5">
-                <FileRow label="ACCUSED" value={sub.killer} />
-                <FileRow label="METHOD" value={sub.method} />
-                <FileRow label="MOTIVE" value={sub.motive} />
+                <FileRow label="ACCUSED" value={mine.killer} />
+                <FileRow label="METHOD" value={mine.method} />
+                <FileRow label="MOTIVE" value={mine.motive} />
               </div>
             )}
             <Link href="/story" className="inline-block mt-12 font-mono text-[10px] tracking-[0.2em] text-mut border border-line px-4 py-2.5 hover:text-ink transition-colors">
@@ -103,7 +98,6 @@ function Round5Inner({ token }: { token: string }) {
     <>
       <p className="font-mono text-[11px] tracking-[0.25em] text-mut mb-3">ROUND 5</p>
       <h1 className="font-display text-5xl md:text-7xl tracking-[-0.02em] mb-6">The Accusation</h1>
-      <Typewriter text={BOTTLENECK} className="font-mono text-sm text-mut" speed={38} startDelay={400} />
       <div className="hairline my-12" />
     </>
   );
@@ -284,5 +278,3 @@ function FileRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-// Suspect roster is delivered server-side only after clearance (suspectsForTeam).

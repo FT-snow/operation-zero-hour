@@ -280,6 +280,31 @@ export const configGet = query({
       hasKiller: !!cfg.realKiller,
       suspects: cfg.suspects ?? [],
       realKiller: cfg.realKiller,
+      driveUrl: cfg.round4DriveUrl ?? "",
     };
+  },
+});
+
+export const setRound4DriveUrl = mutation({
+  args: { token: v.string(), url: v.string() },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const url = args.url.trim();
+    if (url && !/^https:\/\//.test(url)) {
+      return { ok: false as const, error: "URL must start with https://" };
+    }
+    let cfg = await ctx.db.query("config").first();
+    if (!cfg) {
+      if (url) await ctx.db.insert("config", { round4DriveUrl: url });
+    } else {
+      await ctx.db.patch(cfg._id, { round4DriveUrl: url });
+    }
+    await audit(ctx, {
+      action: "config.setRound4DriveUrl",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: url ? `Round 4 drive link set: ${url.slice(0, 60)}` : "Round 4 drive link cleared",
+    });
+    return { ok: true as const };
   },
 });

@@ -299,3 +299,55 @@ export const whoamiInternal = query({
   },
 });
 
+
+// Add a new admin account (existing admin only).
+export const createAdmin = mutation({
+  args: { token: v.string(), email: v.string(), name: v.string(), password: v.string() },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const email = args.email.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return { ok: false as const, error: "Invalid email format" };
+    }
+    if (args.password.length < 8) {
+      return { ok: false as const, error: "Password must be at least 8 characters" };
+    }
+    const existing = await ctx.db
+      .query("admins")
+      .withIndex("by_email", (q) => q.eq("email", email))
+      .unique();
+    if (existing) return { ok: false as const, error: "This admin already exists" };
+    const salt = makeSalt();
+    await ctx.db.insert("admins", {
+      email,
+      name: args.name.trim() || email.split("@")[0],
+      passwordHash: hashPassword(args.password, salt),
+      passwordPlain: args.password,
+      salt,
+      createdAt: Date.now(),
+    });
+    await audit(ctx, {
+      action: "admin.createAdmin",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: `New admin created: ${email}`,
+    });
+    return { ok: true as const };
+  },
+});
+
+// List admins with desk-visible passwords (admin only).
+export const adminsList = query({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    await requireAdminByToken(ctx, args.token);
+    const rows = await ctx.db.query("admins").withIndex("by_email").collect();
+    return {
+      admins: rows.map((a) => ({
+        email: a.email,
+        name: a.name,
+        passwordPlain: a.passwordPlain ?? "—",
+      })),
+    };
+  },
+});

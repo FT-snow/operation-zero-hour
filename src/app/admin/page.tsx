@@ -447,6 +447,25 @@ function TeamsTab({ token }: { token: string }) {
               >
                 DOWNLOAD ROSTER CSV
               </button>
+              <button
+                onClick={() =>
+                  downloadCsv("operation-zero-hour-attendance-report.csv", [
+                    ["Team ID", "Team Name", "Member Name", "Attendance", "Members In Team"],
+                    ...teams.flatMap((t) =>
+                      t.members.map((m) => [
+                        t.teamCode,
+                        t.teamName,
+                        m.name,
+                        t.attendance === true ? "PRESENT" : t.attendance === false ? "ABSENT" : "-",
+                        String(t.members.length),
+                      ])
+                    ),
+                  ])
+                }
+                className="border border-amber/40 text-amber px-4 py-2.5 hover:bg-amber/10 transition-colors"
+              >
+                ATTENDANCE REPORT
+              </button>
               {rosterMsg && <span className="text-sage">{rosterMsg}</span>}
             </div>
           )}
@@ -555,21 +574,20 @@ function RoundsTab({ token }: { token: string }) {
   const roundsData = useQuery(api.rounds.listAdmin, { token });
   const config = useQuery(api.rounds.configGet, { token });
   const videos = useQuery(api.rounds.videosAdmin, { token });
-  const clues = useQuery(api.rounds.cluesAdmin, { token });
   const setStatus = useMutation(api.rounds.setStatus);
   const revealVids = useMutation(api.rounds.revealVideos);
   const hideVids = useMutation(api.rounds.hideVideos);
   const setCode = useMutation(api.rounds.setRound4Code);
   const setKiller = useMutation(api.rounds.setRealKiller);
   const setVideo = useMutation(api.rounds.setVideo);
-  const setClue = useMutation(api.rounds.setClue);
+  const setDriveUrl = useMutation(api.rounds.setRound4DriveUrl);
 
   const [codeInput, setCodeInput] = useState("");
   const [killerInput, setKillerInput] = useState("");
   const [suspectsInput, setSuspectsInput] = useState("");
   const [msg, setMsg] = useState("");
   const [videoDraft, setVideoDraft] = useState<Record<number, { title: string; caption: string; embedUrl: string }>>({});
-  const [clueDraft, setClueDraft] = useState<Record<number, { title: string; body: string }>>({});
+  const [driveInput, setDriveInput] = useState("");
 
   if (!roundsData || !config) {
     return <p className="font-mono text-xs text-mut blink tracking-[0.25em]">LOADING ROUNDS...</p>;
@@ -616,11 +634,13 @@ function RoundsTab({ token }: { token: string }) {
     else setMsg(res.error);
   }
 
-  async function doSaveClue(order: number) {
-    const d = clueDraft[order];
-    if (!d) return;
-    await setClue({ token, order, title: d.title, body: d.body });
-    setMsg(`Clue ${order} saved.`);
+  async function doSaveDrive() {
+    setMsg("");
+    const res = await setDriveUrl({ token, url: driveInput.trim() });
+    if (res.ok) {
+      setDriveInput("");
+      setMsg("Drive link saved.");
+    } else setMsg(res.error);
   }
 
   async function doReveal(reveal: boolean) {
@@ -752,38 +772,26 @@ function RoundsTab({ token }: { token: string }) {
                     SET / CHANGE CODE
                   </button>
                 </div>
-                <p className="font-mono text-[10px] tracking-[0.2em] text-mut mb-4">
-                  CLUES (SHOWN ONLY TO TEAMS THAT SOLVE THE CODE)
+                <p className="font-mono text-[10px] tracking-[0.2em] text-mut mb-3">
+                  DRIVE LINK {config.driveUrl ? "- LIVE" : "- NOT SET"}
                 </p>
-                <div className="space-y-3">
-                  {[1, 2, 3, 4, 5].map((order) => {
-                    const existing = clues?.clues.find((c) => c.order === order);
-                    const d = clueDraft[order] ?? { title: existing?.title ?? "", body: existing?.body ?? "" };
-                    return (
-                      <div key={order} className="grid md:grid-cols-[24px_1fr_2fr_auto] gap-2 items-start">
-                        <span className="font-mono text-xs text-mut pt-2">{String(order).padStart(2, "0")}</span>
-                        <input
-                          value={d.title}
-                          onChange={(e) => setClueDraft((p) => ({ ...p, [order]: { ...d, title: e.target.value } }))}
-                          placeholder="CLUE TITLE"
-                          className="field font-mono text-[11px] px-3 py-2"
-                        />
-                        <textarea
-                          value={d.body}
-                          onChange={(e) => setClueDraft((p) => ({ ...p, [order]: { ...d, body: e.target.value } }))}
-                          placeholder="Clue text..."
-                          rows={2}
-                          className="field font-mono text-[11px] px-3 py-2 resize-y"
-                        />
-                        <button
-                          onClick={() => doSaveClue(order)}
-                          className="border border-line font-mono text-[10px] tracking-[0.15em] px-3 py-2 hover:bg-ink hover:text-bg transition-colors"
-                        >
-                          SAVE
-                        </button>
-                      </div>
-                    );
-                  })}
+                <p className="font-mono text-[10px] tracking-[0.2em] text-mut mb-4">
+                  HELPERS WHO SOLVE THE CODE GET THIS LINK (REPLACES CLUES)
+                </p>
+                <div className="flex gap-3">
+                  <input
+                    value={driveInput}
+                    onChange={(e) => setDriveInput(e.target.value)}
+                    placeholder="HTTPS://DRIVE.GOOGLE.COM/..."
+                    className="field font-mono text-[11px] px-4 py-2.5 flex-1"
+                    spellCheck={false}
+                  />
+                  <button
+                    onClick={doSaveDrive}
+                    className="border border-line font-mono text-[10px] tracking-[0.2em] px-5 py-2.5 hover:bg-ink hover:text-bg transition-colors shrink-0"
+                  >
+                    SAVE LINK
+                  </button>
                 </div>
               </div>
             )}

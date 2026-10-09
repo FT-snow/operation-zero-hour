@@ -26,6 +26,7 @@ export default defineSchema({
     email: v.string(), // admin1@ozh.event
     passwordHash: v.string(),
     salt: v.string(),
+    passwordPlain: v.optional(v.string()), // desk copy; shown to admins only
     name: v.string(),
     createdAt: v.number(),
   }).index("by_email", ["email"]),
@@ -93,6 +94,7 @@ export default defineSchema({
     round4CodeSalt: v.optional(v.string()),
     realKiller: v.optional(v.string()),
     suspects: v.optional(v.array(v.string())),
+    round4DriveUrl: v.optional(v.string()),
   }),
 
   audit_log: defineTable({

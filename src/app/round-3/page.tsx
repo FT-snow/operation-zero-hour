@@ -5,7 +5,6 @@ import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { getToken } from "@/lib/session";
 import { useState } from "react";
-import Typewriter from "@/components/typewriter";
 import { FadeIn, Stagger } from "@/components/fade";
 import { LockIcon } from "@/components/icons";
 
@@ -36,12 +35,7 @@ export default function Round3Page() {
       <section className="max-w-6xl mx-auto px-6 py-20">
         <p className="font-mono text-[11px] tracking-[0.25em] text-mut mb-3">ROUND 3</p>
         <h1 className="font-display text-5xl md:text-7xl tracking-[-0.02em] mb-6">The Evidence Tapes</h1>
-        <Typewriter
-          text="Five pieces of footage. One of them lies."
-          className="font-mono text-sm text-mut mb-4"
-          speed={40}
-          startDelay={400}
-        />
+
         <div className="hairline my-12" />
 
         {data.locked ? (
