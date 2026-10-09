@@ -26,7 +26,7 @@ export const teamLogin = mutation({
   args: { teamCode: v.string(), password: v.string() },
   handler: async (ctx, args) => {
     const code = args.teamCode.trim().toUpperCase();
-    if (!/^TM-\d{3,4}$/.test(code)) {
+    if (!/^(TM-\d{3,4}|TEAM-\d{5})$/.test(code)) {
       return { ok: false as const, error: "Invalid credentials" };
     }
     const team = await ctx.db

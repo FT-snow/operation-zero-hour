@@ -160,6 +160,144 @@ export const generateCredentials = mutation({
   },
 });
 
+export const addChatGeneratedLogins = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const logins = [
+      { teamCode: "TEAM-68420", password: "Raven#4937" },
+      { teamCode: "TEAM-13795", password: "Orbit@8261" },
+      { teamCode: "TEAM-90246", password: "Nexus#1754" },
+      { teamCode: "TEAM-45831", password: "Pixel@6392" },
+      { teamCode: "TEAM-71608", password: "Atlas#2849" },
+      { teamCode: "TEAM-32974", password: "Nova@7516" },
+      { teamCode: "TEAM-80513", password: "Vanta#9204" },
+      { teamCode: "TEAM-24689", password: "Echo@3671" },
+      { teamCode: "TEAM-57132", password: "Quartz#5480" },
+      { teamCode: "TEAM-93467", password: "Lumen@1028" },
+      { teamCode: "TEAM-16350", password: "Drift#7945" },
+      { teamCode: "TEAM-79024", password: "Helix@4319" },
+      { teamCode: "TEAM-41286", password: "Prism#6083" },
+      { teamCode: "TEAM-65891", password: "Falcon@2570" },
+      { teamCode: "TEAM-28743", password: "Titan#9165" },
+      { teamCode: "TEAM-84619", password: "Mosaic@3827" },
+      { teamCode: "TEAM-52076", password: "Nimbus#7401" },
+      { teamCode: "TEAM-37508", password: "Vertex@1956" },
+      { teamCode: "TEAM-69825", password: "Axion#5632" },
+      { teamCode: "TEAM-04197", password: "Zenith@8794" },
+    ];
+
+    const created: { teamCode: string; password: string }[] = [];
+    const skipped: string[] = [];
+    for (const login of logins) {
+      const existing = await ctx.db
+        .query("teams")
+        .withIndex("by_teamCode", (q) => q.eq("teamCode", login.teamCode))
+        .unique();
+      if (existing) {
+        skipped.push(login.teamCode);
+        continue;
+      }
+
+      const suffix = login.teamCode.slice(-5);
+      const participantId = await ctx.db.insert("participants", {
+        name: `Generated login ${suffix}`,
+        source: "manual",
+      });
+      const salt = makeSalt();
+      const teamId = await ctx.db.insert("teams", {
+        teamName: `Generated Team ${suffix}`,
+        teamCode: login.teamCode,
+        passwordHash: hashPassword(login.password, salt),
+        passwordPlain: login.password,
+        salt,
+        memberIds: [participantId],
+        createdAt: Date.now(),
+      });
+      await ctx.db.patch(participantId, { teamId });
+      created.push(login);
+    }
+
+    await audit(ctx, {
+      action: "teams.addChatGeneratedLogins",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: `Added ${created.length} chat-generated team login(s); skipped ${skipped.length}`,
+    });
+
+    return { ok: true as const, created, skipped };
+  },
+});
+
+export const addPostTm103Logins = mutation({
+  args: { token: v.string() },
+  handler: async (ctx, args) => {
+    const admin = await requireAdminByToken(ctx, args.token);
+    const logins = [
+      { teamCode: "TM-104", password: "Cinder#4827" },
+      { teamCode: "TM-105", password: "Vector@9136" },
+      { teamCode: "TM-106", password: "Harbor#2659" },
+      { teamCode: "TM-107", password: "Signal@7402" },
+      { teamCode: "TM-108", password: "Cipher#5918" },
+      { teamCode: "TM-109", password: "Summit@3264" },
+      { teamCode: "TM-110", password: "Ember#8071" },
+      { teamCode: "TM-111", password: "Anchor@1549" },
+      { teamCode: "TM-112", password: "Mirage#6380" },
+      { teamCode: "TM-113", password: "Pulse@4725" },
+      { teamCode: "TM-114", password: "Forge#9362" },
+      { teamCode: "TM-115", password: "Vortex@2187" },
+      { teamCode: "TM-116", password: "Lantern#7043" },
+      { teamCode: "TM-117", password: "Radar@5896" },
+      { teamCode: "TM-118", password: "Cobalt#3418" },
+      { teamCode: "TM-119", password: "Sable@9704" },
+      { teamCode: "TM-120", password: "Quarry#6251" },
+      { teamCode: "TM-121", password: "Beacon@1836" },
+      { teamCode: "TM-122", password: "Matrix#4590" },
+      { teamCode: "TM-123", password: "Rift@7628" },
+    ];
+
+    const created: { teamCode: string; password: string }[] = [];
+    const skipped: string[] = [];
+    for (const login of logins) {
+      const existing = await ctx.db
+        .query("teams")
+        .withIndex("by_teamCode", (q) => q.eq("teamCode", login.teamCode))
+        .unique();
+      if (existing) {
+        skipped.push(login.teamCode);
+        continue;
+      }
+
+      const number = login.teamCode.slice(3);
+      const participantId = await ctx.db.insert("participants", {
+        name: `Generated login ${number}`,
+        source: "manual",
+      });
+      const salt = makeSalt();
+      const teamId = await ctx.db.insert("teams", {
+        teamName: `Generated Team ${number}`,
+        teamCode: login.teamCode,
+        passwordHash: hashPassword(login.password, salt),
+        passwordPlain: login.password,
+        salt,
+        memberIds: [participantId],
+        createdAt: Date.now(),
+      });
+      await ctx.db.patch(participantId, { teamId });
+      created.push(login);
+    }
+
+    await audit(ctx, {
+      action: "teams.addPostTm103Logins",
+      adminId: admin._id,
+      adminLabel: admin.email,
+      details: `Added ${created.length} post-TM-103 team login(s); skipped ${skipped.length}`,
+    });
+
+    return { ok: true as const, created, skipped };
+  },
+});
+
 // Reset to a clean test phase: wipe every team and all round-4/5 artifacts,
 // then recreate ONE known test team. Admins, round statuses, videos, clues
 // and the Round-4 code config are preserved.

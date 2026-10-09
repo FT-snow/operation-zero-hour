@@ -124,6 +124,8 @@ function AdminInner({ token }: { token: string }) {
 function TeamsTab({ token }: { token: string }) {
   const teamsData = useQuery(api.teams.listAdmin, { token });
   const generate = useMutation(api.teams.generateCredentials);
+  const addChatGeneratedLogins = useMutation(api.teams.addChatGeneratedLogins);
+  const addPostTm103Logins = useMutation(api.teams.addPostTm103Logins);
   const resetPw = useMutation(api.auth.resetPassword);
   const deleteTeam = useMutation(api.auth.teamDelete);
   const setAttendanceMutation = useMutation(api.teams.setAttendance);
@@ -217,6 +219,52 @@ function TeamsTab({ token }: { token: string }) {
     }
   }
 
+  async function doAddChatGeneratedLogins() {
+    if (!confirm("Add the 20 chat-generated TEAM login accounts? Existing team IDs will be skipped.")) return;
+    setGenerating(true);
+    setOpsError("");
+    try {
+      const res = await addChatGeneratedLogins({ token });
+      setCreds(
+        res.created.map((c) => ({
+          teamName: `Generated Team ${c.teamCode.slice(-5)}`,
+          teamCode: c.teamCode,
+          password: c.password,
+          members: [`Generated login ${c.teamCode.slice(-5)}`],
+        }))
+      );
+      setPreview(null);
+      setRosterMsg(`Added ${res.created.length} chat-generated login(s); skipped ${res.skipped.length}.`);
+    } catch (err) {
+      setOpsError(err instanceof Error ? err.message : "Could not add generated logins");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function doAddPostTm103Logins() {
+    if (!confirm("Add 20 more team accounts from TM-104 through TM-123? Existing team IDs will be skipped.")) return;
+    setGenerating(true);
+    setOpsError("");
+    try {
+      const res = await addPostTm103Logins({ token });
+      setCreds(
+        res.created.map((c) => ({
+          teamName: `Generated Team ${c.teamCode.slice(3)}`,
+          teamCode: c.teamCode,
+          password: c.password,
+          members: [`Generated login ${c.teamCode.slice(3)}`],
+        }))
+      );
+      setPreview(null);
+      setRosterMsg(`Added ${res.created.length} TM-104+ login(s); skipped ${res.skipped.length}.`);
+    } catch (err) {
+      setOpsError(err instanceof Error ? err.message : "Could not add TM-104+ logins");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   async function doReset(teamCode: string) {
     if (!confirm(`Reset password for ${teamCode}? Old sessions will be killed.`)) return;
     const res = await resetPw({ token, teamCode });
@@ -277,6 +325,20 @@ function TeamsTab({ token }: { token: string }) {
               className="border border-line text-ink font-mono text-[11px] tracking-[0.2em] px-6 py-3 hover:bg-ink hover:text-bg transition-colors active:scale-[0.98]"
             >
               {preview ? "REPLACE FILE" : "UPLOAD FILE"}
+            </button>
+            <button
+              onClick={doAddChatGeneratedLogins}
+              disabled={generating}
+              className="border border-amber text-amber font-mono text-[11px] tracking-[0.2em] px-6 py-3 hover:bg-amber hover:text-bg transition-colors disabled:opacity-40 active:scale-[0.98]"
+            >
+              ADD 20 CHAT LOGINS
+            </button>
+            <button
+              onClick={doAddPostTm103Logins}
+              disabled={generating}
+              className="border border-sage text-sage font-mono text-[11px] tracking-[0.2em] px-6 py-3 hover:bg-sage hover:text-bg transition-colors disabled:opacity-40 active:scale-[0.98]"
+            >
+              ADD TM-104 TO TM-123
             </button>
             <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" onChange={onFile} className="hidden" />
           </div>
