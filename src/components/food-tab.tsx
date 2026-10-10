@@ -265,11 +265,12 @@ export default function FoodTab({ token }: { token: string }) {
               <span className="text-amber">REVENUE: Rs. {orders.revenue}</span>
               <button
                 onClick={() => {
-                  const rowsOut: (string | number)[][] = [["Team ID", "Team Name", "Items", "Subtotal (Rs)", "Delivery (Rs)", "Total (Rs)", "Status", "Transaction ID", "Screenshot URL", "Placed At"]];
+                  const rowsOut: (string | number)[][] = [["Team ID", "Team Name", "Room", "Items", "Subtotal (Rs)", "Delivery (Rs)", "Total (Rs)", "Status", "Transaction ID", "Screenshot URL", "Placed At"]];
                   for (const o of orders.orders) {
                     rowsOut.push([
                       o.teamCode,
                       o.teamName,
+                      o.roomNumber ?? "",
                       o.items.map((i: { qty: number; name: string }) => `${i.qty}x ${i.name}`).join(" | "),
                       o.subtotal,
                       o.deliveryCharge,
@@ -280,7 +281,7 @@ export default function FoodTab({ token }: { token: string }) {
                       new Date(o.placedAt).toISOString(),
                     ]);
                   }
-                  rowsOut.push(["", "", "", orders.revenue, "--- GRAND TOTAL ---"]);
+                  rowsOut.push(["", "", "", "", "", "--- GRAND TOTAL ---", orders.revenue]);
                   rowsOut.push([]);
                   rowsOut.push(["KITCHEN TALLY (restaurant handoff)"]);
                   rowsOut.push(["Item", "Total Qty"]);
@@ -316,6 +317,7 @@ export default function FoodTab({ token }: { token: string }) {
                 <thead className="sticky top-0 bg-[#0d0d0d] text-left text-mut">
                   <tr>
                     <th className="px-4 py-2.5 font-normal">TEAM</th>
+                    <th className="px-4 py-2.5 font-normal">ROOM</th>
                     <th className="px-4 py-2.5 font-normal">ORDER</th>
                     <th className="px-4 py-2.5 font-normal">SUBTOTAL</th>
                     <th className="px-4 py-2.5 font-normal">DELIVERY</th>
@@ -334,6 +336,7 @@ export default function FoodTab({ token }: { token: string }) {
                         <span className="text-amber mr-2">{o.teamCode}</span>
                         {o.teamName}
                       </td>
+                      <td className="px-4 py-3 font-bold text-ink">{o.roomNumber || <span className="text-mut font-normal">-</span>}</td>
                       <td className="px-4 py-3 text-mut max-w-md">
                         {o.items.map((i: { qty: number; name: string; price: number }) => `${i.qty}x ${i.name} (Rs.${i.price})`).join(", ")}
                       </td>

@@ -99,6 +99,17 @@ export const setPaymentQr = mutation({
   },
 });
 
+export const setRoomNumber = mutation({
+  args: { token: v.string(), roomNumber: v.string() },
+  handler: async (ctx, args) => {
+    const team = await requireTeamByToken(ctx, args.token);
+    const room = args.roomNumber.trim().slice(0, 24);
+    if (!room) return { ok: false as const, error: "Enter your room number" };
+    await ctx.db.patch(team._id, { roomNumber: room });
+    return { ok: true as const, roomNumber: room };
+  },
+});
+
 // Admin menu management
 export const menuAdmin = query({
   args: { token: v.string() },
@@ -162,6 +173,7 @@ export const ordersAdmin = query({
         _id: order._id,
         teamCode: team.teamCode,
         teamName: team.teamName,
+        roomNumber: team.roomNumber ?? "",
         items: order.items,
         subtotal: order.subtotal,
         deliveryCharge: order.deliveryCharge,
@@ -244,6 +256,7 @@ export const listFood = query({
     if (!enabled) {
       return {
         enabled: false as const,
+        roomNumber: team.roomNumber ?? "",
         restaurantName: cfg?.restaurantName ?? "COSMOS MENU",
         upiVpa: "",
         payLink: "",
@@ -261,6 +274,7 @@ export const listFood = query({
 
     return {
       enabled: true as const,
+      roomNumber: team.roomNumber ?? "",
       restaurantName: cfg?.restaurantName ?? "COSMOS MENU",
       upiVpa: cfg?.upiVpa ?? "",
       payLink: cfg?.payLink ?? "",

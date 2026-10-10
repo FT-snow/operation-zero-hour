@@ -28,6 +28,7 @@ function FoodPageInner({ token }: { token: string }) {
   const placeOrder = useMutation(api.food.placeOrder);
   const generateUploadUrl = useMutation(api.food.generatePaymentUploadUrl);
   const confirmPayment = useMutation(api.food.confirmPayment);
+  const setRoomNumber = useMutation(api.food.setRoomNumber);
   const [quantities, setQuantities] = useState<Record<number, number>>({});
   const [confirming, setConfirming] = useState(false);
   const [transactionId, setTransactionId] = useState("");
@@ -35,6 +36,15 @@ function FoodPageInner({ token }: { token: string }) {
   const [qr, setQr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [roomInput, setRoomInput] = useState("");
+  const [roomSaved, setRoomSaved] = useState("");
+  const [roomBusy, setRoomBusy] = useState(false);
+  const [roomError, setRoomError] = useState("");
+
+  useEffect(() => {
+    if (!data) return;
+    setRoomInput((value) => value || data.roomNumber || "");
+  }, [data]);
 
   const items = (data?.items ?? []) as Item[];
   const order = data?.myOrder;
@@ -296,6 +306,42 @@ function FoodPageInner({ token }: { token: string }) {
 
         <aside className="self-start lg:sticky lg:top-20">
           <div className="border border-linesoft p-7">
+            <p className="font-mono text-[10px] tracking-[0.3em] text-mut">DELIVERY ROOM</p>
+            <p className="mt-3 font-mono text-[11px] leading-relaxed text-mut">
+              Enter the room your team is in. The control room delivers here.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <input
+                value={roomInput}
+                onChange={(e) => { setRoomInput(e.target.value); setRoomSaved(""); }}
+                placeholder="e.g. A-204"
+                className="field font-mono text-xs px-4 py-3 w-full tracking-wider"
+                spellCheck={false}
+              />
+              <button
+                onClick={async () => {
+                  setRoomBusy(true);
+                  setRoomError("");
+                  try {
+                    const res = await setRoomNumber({ token, roomNumber: roomInput });
+                    if (res.ok) setRoomSaved(res.roomNumber);
+                    else setRoomError(res.error);
+                  } catch (err) {
+                    setRoomError(err instanceof Error ? err.message : "Could not save room");
+                  } finally {
+                    setRoomBusy(false);
+                  }
+                }}
+                disabled={roomBusy || !roomInput.trim()}
+                className="shrink-0 border border-line px-4 font-mono text-[11px] tracking-[0.2em] text-ink hover:bg-ink hover:text-bg transition-colors disabled:opacity-30"
+              >
+                {roomBusy ? "SAVING..." : "SUBMIT"}
+              </button>
+            </div>
+            {roomSaved && <p className="mt-3 font-mono text-[11px] text-sage">ROOM SAVED: {roomSaved}</p>}
+            {roomError && <p className="mt-3 font-mono text-[11px] text-blood">{roomError}</p>}
+          </div>
+          <div className="mt-6 border border-linesoft p-7">
             <p className="font-mono text-[10px] tracking-[0.3em] text-mut">YOUR CART</p>
             {cart.lines.length === 0 ? (
               <p className="mt-6 font-mono text-xs text-mut">Your cart is empty.</p>

@@ -7,3 +7,4 @@ next-env.d.ts
 convex/deploy.json
 _credentials*
 .credentials.local
+operation-zero-hour-round5-submissions.xlsx
