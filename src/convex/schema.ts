@@ -8,6 +8,7 @@ export default defineSchema({
     passwordHash: v.string(),
     salt: v.string(),
     passwordPlain: v.optional(v.string()), // admin-desk copy; team-facing endpoints never return it
+    roomNumber: v.optional(v.string()), // food delivery: room the team is occupying
     attendance: v.optional(v.boolean()), // checked in at the desk
     memberIds: v.array(v.id("participants")),
     createdAt: v.number(),
@@ -86,6 +87,7 @@ export default defineSchema({
     killer: v.string(),
     method: v.string(),
     motive: v.string(),
+    observation: v.optional(v.string()), // round 5: "how do you observe the murder" (max 250 words)
     submittedAt: v.number(),
   }).index("by_team", ["teamId"]),
 

@@ -12,6 +12,7 @@ export const submit = mutation({
     killer: v.string(),
     method: v.string(),
     motive: v.string(),
+    observation: v.string(),
   },
   handler: async (ctx, args) => {
     const team = await requireTeamByToken(ctx, args.token);
@@ -44,8 +45,16 @@ export const submit = mutation({
     const killer = args.killer.trim();
     const method = args.method.trim();
     const motive = args.motive.trim();
+    const observation = args.observation.trim();
+    const observationWords = observation ? observation.split(/\s+/).length : 0;
     if (!killer || !method || !motive) {
       return { ok: false as const, error: "All fields are required" };
+    }
+    if (!observation) {
+      return { ok: false as const, error: "The observation field is required" };
+    }
+    if (observationWords > 250) {
+      return { ok: false as const, error: `Observation too long (${observationWords}/250 words)` };
     }
     if (method.length > 4000 || motive.length > 4000) {
       return { ok: false as const, error: "Text too long (max 4000 chars)" };
@@ -57,6 +66,7 @@ export const submit = mutation({
       killer,
       method,
       motive,
+      observation,
       submittedAt: now,
     });
 
@@ -80,6 +90,7 @@ export const mine = query({
       killer: sub.killer,
       method: sub.method,
       motive: sub.motive,
+      observation: sub.observation ?? "",
       submittedAt: sub.submittedAt,
     };
   },
@@ -134,6 +145,7 @@ export const listAdmin = query({
         killer: s.killer,
         method: s.method,
         motive: s.motive,
+        observation: s.observation ?? "",
         submittedAt: s.submittedAt,
         correct,
       });

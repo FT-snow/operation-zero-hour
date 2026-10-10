@@ -1057,6 +1057,7 @@ function ResultsTab({ token }: { token: string }) {
                     <th className="px-4 py-2.5 font-normal">ACCUSED</th>
                     <th className="px-4 py-2.5 font-normal">VERDICT</th>
                     <th className="px-4 py-2.5 font-normal">FILED AT</th>
+                    <th className="px-4 py-2.5 font-normal">FULL RESPONSE</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1072,6 +1073,16 @@ function ResultsTab({ token }: { token: string }) {
                         {s.correct ? "CORRECT" : "WRONG"}
                       </td>
                       <td className="px-4 py-2.5 text-mut">{stamp(s.submittedAt)}</td>
+                      <td className="px-4 py-2.5">
+                        <button
+                          onClick={() =>
+                            alert(`${s.teamCode} - ${s.teamName}\n\nMETHOD:\n${s.method}\n\nMOTIVE:\n${s.motive}\n\nOBSERVATION:\n${s.observation || "(none)"}`)
+                          }
+                          className="border border-line px-3 py-1.5 font-mono text-[10px] tracking-[0.15em] text-mut hover:text-ink transition-colors"
+                        >
+                          VIEW FULL RESPONSE
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1105,12 +1116,15 @@ function ResultsTab({ token }: { token: string }) {
               <button
                 onClick={() =>
                   downloadCsv("zero-hour-round5-submissions.csv", [
-                    ["Team ID", "Team Name", "Accused", "Verdict", "Filed At (server)"],
+                    ["Team ID", "Team Name", "Accused", "Verdict", "Method", "Motive", "Observation", "Filed At (server)"],
                     ...subs.submissions.map((s) => [
                       s.teamCode,
                       s.teamName,
                       s.killer,
                       s.correct ? "CORRECT" : "WRONG",
+                      s.method,
+                      s.motive,
+                      s.observation ?? "",
                       stampLED(s.submittedAt),
                     ]),
                   ])
@@ -1165,6 +1179,7 @@ function ResultsTab({ token }: { token: string }) {
 function LogsTab({ token }: { token: string }) {
   const logs = useQuery(api.logs.listAdmin, { token, limit: 200 });
   const attempts = useQuery(api.round4.attemptsAdmin, { token, limit: 100 });
+  const [correctOnly, setCorrectOnly] = useState(false);
 
   if (!logs) {
     return <p className="font-mono text-xs text-mut blink tracking-[0.25em]">READING THE LEDGER...</p>;
@@ -1205,7 +1220,26 @@ function LogsTab({ token }: { token: string }) {
       {attempts && (
         <FadeIn>
           <section className="border border-linesoft p-7">
-            <h2 className="font-display text-3xl tracking-tight mb-5">Round 04 - Attempt Feed</h2>
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+              <h2 className="font-display text-3xl tracking-tight">Round 04 - Attempt Feed</h2>
+              <div className="flex items-center gap-4 font-mono text-[10px] tracking-[0.2em]">
+                {attempts.attempts.length > 0 && (
+                  <span className="text-mut">
+                    {attempts.attempts.filter((a) => a.isCorrect).length} CORRECT / {attempts.attempts.length} TOTAL
+                  </span>
+                )}
+                <button
+                  onClick={() => setCorrectOnly((v) => !v)}
+                  className={`border px-4 py-2.5 transition-colors ${
+                    correctOnly
+                      ? "border-sage text-sage bg-sage/10"
+                      : "border-line text-mut hover:text-ink"
+                  }`}
+                >
+                  {correctOnly ? "SHOWING CORRECT ONLY" : "FILTER CORRECT ONLY"}
+                </button>
+              </div>
+            </div>
             {attempts.attempts.length === 0 ? (
               <p className="font-mono text-xs text-mut">No attempts logged yet.</p>
             ) : (
@@ -1219,7 +1253,7 @@ function LogsTab({ token }: { token: string }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {attempts.attempts.map((a, i) => (
+                    {attempts.attempts.filter((a) => (correctOnly ? a.isCorrect : true)).map((a, i) => (
                       <tr key={i} className="border-t border-linesoft">
                         <td className="px-4 py-2.5 text-mut whitespace-nowrap">
                           {new Date(a.at).toISOString().replace("T", " ").slice(0, 19)}

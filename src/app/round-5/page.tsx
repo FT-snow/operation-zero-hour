@@ -23,6 +23,7 @@ function Round5Inner({ token }: { token: string }) {
   const [killer, setKiller] = useState("");
   const [method, setMethod] = useState("");
   const [motive, setMotive] = useState("");
+  const [observation, setObservation] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -42,7 +43,7 @@ function Round5Inner({ token }: { token: string }) {
     setBusy(true);
     setError("");
     try {
-      const res = await submit({ token, killer, method, motive });
+      const res = await submit({ token, killer, method, motive, observation });
       if (res.ok) {
         setDone({ at: res.submittedAt });
         setConfirming(false);
@@ -82,6 +83,7 @@ function Round5Inner({ token }: { token: string }) {
                 <FileRow label="ACCUSED" value={mine.killer} />
                 <FileRow label="METHOD" value={mine.method} />
                 <FileRow label="MOTIVE" value={mine.motive} />
+                <FileRow label="OBSERVATION" value={mine.observation} />
               </div>
             )}
             <Link href="/story" className="inline-block mt-12 font-mono text-[10px] tracking-[0.2em] text-mut border border-line px-4 py-2.5 hover:text-ink transition-colors">
@@ -156,6 +158,7 @@ function Round5Inner({ token }: { token: string }) {
                 <FileRow label="ACCUSED" value={killer || "-"} />
                 <FileRow label="METHOD" value={method || "-"} />
                 <FileRow label="MOTIVE" value={motive || "-"} />
+                <FileRow label="OBSERVATION" value={observation || "-"} />
               </div>
               {error && <p className="font-mono text-xs text-blood mb-6">{error}</p>}
               <div className="flex flex-col sm:flex-row gap-4">
@@ -191,8 +194,13 @@ function Round5Inner({ token }: { token: string }) {
             onSubmit={(e: FormEvent) => {
               e.preventDefault();
               setError("");
-              if (!killer || !method.trim() || !motive.trim()) {
+              if (!killer || !method.trim() || !motive.trim() || !observation.trim()) {
                 setError("All fields are required.");
+                return;
+              }
+              const wordCount = observation.trim().split(/\s+/).length;
+              if (wordCount > 250) {
+                setError("Observation must be 250 words or fewer.");
                 return;
               }
               setConfirming(true);
@@ -243,6 +251,22 @@ function Round5Inner({ token }: { token: string }) {
                 placeholder="What drove them to it?"
               />
               <p className="font-mono text-[9px] text-mut mt-2">{motive.length} / 4000</p>
+            </div>
+            <div>
+              <label className="font-mono text-[10px] tracking-[0.2em] text-mut block mb-3">
+                HOW DO YOU OBSERVE THE MURDER?
+              </label>
+              <textarea
+                value={observation}
+                onChange={(e) => setObservation(e.target.value)}
+                rows={6}
+                maxLength={2500}
+                className="field w-full px-4 py-3.5 text-sm leading-relaxed resize-y"
+                placeholder="Look at the scene through your eyes. What did you notice?"
+              />
+              <p className={`font-mono text-[9px] mt-2 ${observation.trim().split(/\s+/).filter(Boolean).length > 250 ? "text-blood" : "text-mut"}`}>
+                {observation.trim().split(/\s+/).filter(Boolean).length} / 250 WORDS
+              </p>
             </div>
             {error && <p className="font-mono text-xs text-blood">{error}</p>}
             <button
