@@ -1056,8 +1056,10 @@ function ResultsTab({ token }: { token: string }) {
                     <th className="px-4 py-2.5 font-normal">TEAM</th>
                     <th className="px-4 py-2.5 font-normal">ACCUSED</th>
                     <th className="px-4 py-2.5 font-normal">VERDICT</th>
+                    <th className="px-4 py-2.5 font-normal">HOW KILLED</th>
+                    <th className="px-4 py-2.5 font-normal">MOTIVE</th>
+                    <th className="px-4 py-2.5 font-normal">OBSERVATION</th>
                     <th className="px-4 py-2.5 font-normal">FILED AT</th>
-                    <th className="px-4 py-2.5 font-normal">FULL RESPONSE</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1072,17 +1074,10 @@ function ResultsTab({ token }: { token: string }) {
                       <td className={`px-4 py-2.5 ${s.correct ? "text-sage" : "text-blood"}`}>
                         {s.correct ? "CORRECT" : "WRONG"}
                       </td>
+                      <td className="px-4 py-2.5 text-mut max-w-xs break-words whitespace-pre-wrap">{s.method}</td>
+                      <td className="px-4 py-2.5 text-mut max-w-xs break-words whitespace-pre-wrap">{s.motive}</td>
+                      <td className="px-4 py-2.5 text-mut max-w-xs break-words whitespace-pre-wrap">{s.observation || "—"}</td>
                       <td className="px-4 py-2.5 text-mut">{stamp(s.submittedAt)}</td>
-                      <td className="px-4 py-2.5">
-                        <button
-                          onClick={() =>
-                            alert(`${s.teamCode} - ${s.teamName}\n\nMETHOD:\n${s.method}\n\nMOTIVE:\n${s.motive}\n\nOBSERVATION:\n${s.observation || "(none)"}`)
-                          }
-                          className="border border-line px-3 py-1.5 font-mono text-[10px] tracking-[0.15em] text-mut hover:text-ink transition-colors"
-                        >
-                          VIEW FULL RESPONSE
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
